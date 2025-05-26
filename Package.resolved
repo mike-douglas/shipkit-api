@@ -1,5 +1,5 @@
 {
-  "originHash" : "74a971ae671311dc943167d134289b52092fc394f49e326a5045bfd8f4a9ff62",
+  "originHash" : "6806caeb03e77d16df0250359bc524291d7b1391db63d9c6523be730f4472b28",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -305,6 +305,24 @@
       "state" : {
         "revision" : "a34201439c74b53f0fd71ef11741af7e7caf01e1",
         "version" : "1.4.2"
+      }
+    },
+    {
+      "identity" : "swiftemailvalidator",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ekscrypto/SwiftEmailValidator.git",
+      "state" : {
+        "revision" : "521eaed505350164ae5a3ad80457fa8639d0c3a6",
+        "version" : "1.0.4"
+      }
+    },
+    {
+      "identity" : "swiftpublicsuffixlist",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ekscrypto/SwiftPublicSuffixList.git",
+      "state" : {
+        "revision" : "e59868f29739bb82e5f0db5fcb494e834802403b",
+        "version" : "1.1.6"
       }
     },
     {

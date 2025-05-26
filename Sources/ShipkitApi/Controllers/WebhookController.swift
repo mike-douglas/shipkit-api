@@ -12,5 +12,6 @@ struct WebhookController: RouteCollection {
         let webhooks = routes.grouped("webhooks")
 
         try webhooks.register(collection: AfterShipWebhookController())
+        try webhooks.register(collection: MailgunWebhookController())
     }
 }

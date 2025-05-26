@@ -19,6 +19,8 @@ let package = Package(
         .package(url: "ssh://git@github.com/mike-douglas/swift-aftership.git", branch: "main"),
         // Metrics
         .package(url: "https://github.com/swift-server/swift-prometheus.git", from: "2.0.0"),
+        // Email validation
+        .package(url: "https://github.com/ekscrypto/SwiftEmailValidator.git", from: "1.0.4"),
     ],
     targets: [
         .executableTarget(
@@ -31,6 +33,7 @@ let package = Package(
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "AfterShip", package: "swift-aftership"),
                 .product(name: "Prometheus", package: "swift-prometheus"),
+                .product(name: "SwiftEmailValidator", package: "SwiftEmailValidator"),
             ],
             swiftSettings: swiftSettings
         ),

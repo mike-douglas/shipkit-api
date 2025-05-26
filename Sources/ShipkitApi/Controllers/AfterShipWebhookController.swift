@@ -28,32 +28,25 @@ private struct ASWebhookEvent: Codable, Content {
 }
 
 struct AfterShipWebhookController: RouteCollection {
+    private let hmacSecret: String
+
+    init() {
+        guard let hmacSecret: String = Environment.process.AFTERSHIP_WEBHOOK_SECRET else {
+            fatalError("AFTERSHIP_WEBHOOK_SECRET environment variable not set")
+        }
+
+        self.hmacSecret = hmacSecret
+    }
+
     func boot(routes: any RoutesBuilder) throws {
         let aftership = routes.grouped("aftership")
 
         aftership.post(use: incomingWebhook)
     }
 
-    /// Generate a signature used to validate the authenticity of a request
+    /// Handle incoming AfterShip API webhook.
     ///
-    /// - Parameters:
-    ///   - data: Data to sign
-    ///   - secret: Secret to sign it with
-    /// - Returns: A base64 string
-    private func hmacSha256(data: String, secret: String) -> String? {
-        let key = SymmetricKey(data: Data(secret.utf8))
-
-        guard let dataToSign = data.data(using: .utf8) else {
-            return nil
-        }
-
-        let signature = HMAC<SHA256>.authenticationCode(for: dataToSign, using: key)
-        let hmacData = Data(signature)
-
-        return hmacData.base64EncodedString()
-    }
-
-    /// Handle incoming AfterShip API webhook
+    /// This will send a notification to the user that an update is available for their shipment.
     ///
     /// - Parameter req: Request
     /// - Returns: HTTP Status or error
@@ -67,8 +60,10 @@ struct AfterShipWebhookController: RouteCollection {
             return .badRequest
         }
 
-        let secret = req.application.environment.AFTERSHIP_WEBHOOK_SECRET
-        let signature = hmacSha256(data: requestBody, secret: secret)
+        let signature = hmacSha256(
+            data: requestBody,
+            secret: hmacSecret
+        )
 
         guard let signature, hmacAuth == signature else {
             return .unauthorized

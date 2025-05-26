@@ -14,7 +14,15 @@ extension ShipkitShipmentUpdate: Content, @unchecked Sendable {}
 extension ShipkitCarrier: Content, @unchecked Sendable {}
 
 struct ShipmentController: RouteCollection {
-    private let client = AfterShipClient(apiKey: "asat_cabb5ee9f15141f187bac174e89bbc39")
+    private let client: AfterShipClient
+
+    init() {
+        guard let apiKey = Environment.process.AFTERSHIP_API_KEY else {
+            fatalError("AFTERSHIP_API_KEY environment variable not set")
+        }
+
+        client = AfterShipClient(apiKey: apiKey)
+    }
 
     func boot(routes: any RoutesBuilder) throws {
         let shipments = routes.grouped("tracking")
