@@ -1,5 +1,5 @@
 {
-  "originHash" : "6806caeb03e77d16df0250359bc524291d7b1391db63d9c6523be730f4472b28",
+  "originHash" : "f98cb39376830d03b2ea341135f13dcbf7865b81af8df6060667226b31445f39",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -106,7 +106,7 @@
       "location" : "ssh://git@github.com/mike-douglas/swift-aftership.git",
       "state" : {
         "branch" : "main",
-        "revision" : "57ae7464d90f49a1853ac703d73fe3cf0be25fad"
+        "revision" : "09d9f8f9ca49003460f69affe1e02051745ce30b"
       }
     },
     {

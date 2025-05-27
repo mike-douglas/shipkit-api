@@ -7,4 +7,5 @@
 
 struct ShipkitTrackingRequest: Codable {
     let trackingNumber: String
+    let title: String?
 }

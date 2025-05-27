@@ -42,10 +42,19 @@ struct ShipmentController: RouteCollection {
     func startTracking(req: Request) async throws -> ShipkitShipment {
         _ = try req.auth.require(APIUser.self)
 
+        guard let userId = req.parameters.get("userId") else {
+            throw Abort(.badRequest)
+        }
+
+        let customFields = ["userId": userId]
         let trackingRequest = try req.content.decode(ShipkitTrackingRequest.self)
 
         do {
-            if let trackingResponse = try await client.createTracking(trackingNumber: trackingRequest.trackingNumber) {
+            if let trackingResponse = try await client.createTracking(
+                trackingNumber: trackingRequest.trackingNumber,
+                title: trackingRequest.title,
+                customFields: customFields
+            ) {
                 return trackingResponse.toDTO()
             } else {
                 throw Abort(.internalServerError)
