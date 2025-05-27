@@ -100,8 +100,8 @@ struct MailgunWebhookController: RouteCollection {
 
             // TODO: Detect tracking number, title, and carrier from the body of the email
             let trackingNumber = "1Z23456789"
-            let title = "Test Package"
-            let carrier = "USPS"
+            // let title = "Test Package"
+            // let carrier = "USPS"
             let shipmentId: String
 
             // Start tracking the shipment

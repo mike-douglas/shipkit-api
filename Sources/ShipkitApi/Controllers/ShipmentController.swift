@@ -40,6 +40,8 @@ struct ShipmentController: RouteCollection {
     /// - Returns: HTTP Status
     @Sendable
     func startTracking(req: Request) async throws -> ShipkitShipment {
+        _ = try req.auth.require(APIUser.self)
+
         let trackingRequest = try req.content.decode(ShipkitTrackingRequest.self)
 
         do {
@@ -65,6 +67,8 @@ struct ShipmentController: RouteCollection {
     /// - Returns: HTTP Status
     @Sendable
     func getLatestTrackingUpdates(req: Request) async throws -> ShipkitShipment {
+        _ = try req.auth.require(APIUser.self)
+
         guard let shipmentId = req.parameters.get("shipmentId") else {
             throw Abort(.badRequest)
         }
@@ -99,6 +103,8 @@ struct ShipmentController: RouteCollection {
 
     @Sendable
     func detectCarrierForTracking(req: Request) async throws -> [ShipkitCarrier] {
+        _ = try req.auth.require(APIUser.self)
+
         let carrierDetectRequest = try req.query.decode(ShipkitCarrierDetectionRequest.self)
 
         guard let trackingNumber = carrierDetectRequest.trackingNumber else {

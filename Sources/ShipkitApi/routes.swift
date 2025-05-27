@@ -4,7 +4,8 @@ import Prometheus
 import Vapor
 
 func routes(_ app: Application) throws {
-    app.get("metrics") { _ async throws -> String in
+    app.grouped(UserAuthenticator()).get("metrics") { request async throws -> String in
+        _ = try request.auth.require(APIMetricsUser.self)
         guard let metricsFactory = MetricsSystem.factory as? PrometheusMetricsFactory else {
             throw Abort(.notImplemented)
         }

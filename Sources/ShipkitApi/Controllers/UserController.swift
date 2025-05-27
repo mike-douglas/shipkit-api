@@ -23,7 +23,7 @@ extension ShipkitUserInboxItem: Content, @unchecked Sendable {}
 
 struct UserController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
-        let users = routes.grouped("user")
+        let users = routes.grouped(UserAuthenticator()).grouped("user")
 
         users.post("", use: registerUser)
 
@@ -53,6 +53,8 @@ struct UserController: RouteCollection {
     /// - Returns: The created users, with ID and mailbox
     @Sendable
     func registerUser(req: Request) async throws -> ShipkitUser {
+        _ = try req.auth.require(APIUser.self)
+
         let user = User()
 
         user.mailbox = generateRandomString(length: 8).lowercased()
@@ -73,6 +75,8 @@ struct UserController: RouteCollection {
 
     @Sendable
     func getUserInbox(req: Request) async throws -> [ShipkitUserInboxItem] {
+        _ = try req.auth.require(APIUser.self)
+
         guard let user = try await User.find(req.parameters.get("userId"), on: req.db) else {
             throw Abort(.notFound)
         }
