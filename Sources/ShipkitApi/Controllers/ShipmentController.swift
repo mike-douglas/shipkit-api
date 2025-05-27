@@ -55,6 +55,7 @@ struct ShipmentController: RouteCollection {
                 title: trackingRequest.title,
                 customFields: customFields
             ) {
+                AppMetrics.shared.packagesCounter(source: .api).increment(by: 1)
                 return trackingResponse.toDTO()
             } else {
                 throw Abort(.internalServerError)

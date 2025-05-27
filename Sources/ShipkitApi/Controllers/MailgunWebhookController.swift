@@ -120,6 +120,8 @@ struct MailgunWebhookController: RouteCollection {
 
             // Save to user
             try await user.$shipments.create(newShipment, on: req.db)
+
+            AppMetrics.shared.packagesCounter(source: .email).increment(by: 1)
         } catch {
             req.logger.error("Error: \(error)")
             throw Abort(.internalServerError)
