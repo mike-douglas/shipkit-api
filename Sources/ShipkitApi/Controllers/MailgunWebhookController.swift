@@ -77,7 +77,7 @@ struct MailgunWebhookController: RouteCollection {
                 throw Abort(.badRequest, reason: "Invalid recipient email address")
             }
 
-            guard let body = message.bodyPlain else {
+            guard let _ = message.bodyPlain else {
                 throw Abort(.badRequest, reason: "Missing email body")
             }
 

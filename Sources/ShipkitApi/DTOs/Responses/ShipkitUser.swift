@@ -11,4 +11,5 @@ import struct Foundation.UUID
 struct ShipkitUser: Codable {
     let id: UUID
     let mailbox: String
+    let devices: [ShipkitUserDevice]
 }

@@ -26,6 +26,7 @@ struct UserController: RouteCollection {
         let users = routes.grouped(UserAuthenticator()).grouped("user")
 
         users.post("", use: registerUser)
+        users.put("", use: updateSettings)
 
         try users.group(":userId") { user in
             user.get("shipments", use: getUserInbox)
@@ -69,8 +70,33 @@ struct UserController: RouteCollection {
     /// - Parameter req: Request
     /// - Returns: HTTP Status
     @Sendable
-    func updateSettings(req _: Request) async throws -> HTTPStatus {
-        .notImplemented
+    func updateSettings(req: Request) async throws -> ShipkitUser {
+        _ = try req.auth.require(APIUser.self)
+
+        guard let user = try await User.find(req.parameters.get("userId"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+
+        let updateRequest = try req.content.decode(ShipkitUpdateUserRequest.self)
+
+        for deviceUpdate in updateRequest.user.devices {
+            if let device = try await user.$devices.query(on: req.db).filter(\.$deviceId == deviceUpdate.deviceId).first() {
+                if let notificationPreference = UserDeviceNotificationPreference(rawValue: deviceUpdate.notificationPreference.rawValue) {
+                    device.notificationPreference = notificationPreference
+                }
+
+                try await device.save(on: req.db)
+            } else {
+                let newDevice = UserDevice()
+
+                newDevice.deviceId = deviceUpdate.deviceId
+                newDevice.notificationPreference = .init(rawValue: deviceUpdate.notificationPreference.rawValue) ?? .allUpdates
+
+                try await user.$devices.create(newDevice, on: req.db)
+            }
+        }
+
+        return user.toDTO()
     }
 
     @Sendable

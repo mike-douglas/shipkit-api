@@ -11,12 +11,16 @@ final class User: Model, @unchecked Sendable {
     var mailbox: String
 
     @Children(for: \.$user)
+    var devices: [UserDevice]
+
+    @Children(for: \.$user)
     var shipments: [ReceivedShipment]
 
     func toDTO() -> ShipkitUser {
         .init(
             id: id!,
-            mailbox: mailbox
+            mailbox: mailbox,
+            devices: devices.map { $0.toDTO() }
         )
     }
 }
