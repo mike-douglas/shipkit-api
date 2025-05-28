@@ -11,6 +11,7 @@ import Vapor
 
 struct AppNotifications {
     let apnsConfig: APNSClientConfiguration
+    let topic: String
 
     static let shared: AppNotifications = {
         do {
@@ -36,6 +37,12 @@ struct AppNotifications {
         guard let apnsEnvironment = Environment.process.APNS_ENVIRONMENT else {
             fatalError("APNS_ENVIRONMENT environment variable not set")
         }
+
+        guard let apnsTopic = Environment.process.APNS_TOPIC else {
+            fatalError("APNS_TOPIC environment variable not set")
+        }
+
+        topic = apnsTopic
 
         apnsConfig = try .init(
             authenticationMethod: .jwt(
