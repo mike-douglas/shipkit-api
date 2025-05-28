@@ -29,7 +29,7 @@ final class ReceivedShipment: Model, @unchecked Sendable {
 }
 
 extension ReceivedShipment {
-    func toDTO() -> ShipkitUserInboxItem {
+    func toDTO(on _: any Database) async throws -> ShipkitUserInboxItem {
         .init(
             id: shipmentId,
             trackingNumber: trackingNumber,

@@ -25,8 +25,10 @@ final class UserDevice: Model, @unchecked Sendable {
 
     @Parent(key: "userId")
     var user: User
+}
 
-    func toDTO() -> ShipkitUserDevice {
+extension UserDevice {
+    func toDTO(on _: any Database) async throws -> ShipkitUserDevice {
         .init(
             deviceId: deviceId,
             notificationPreference: .init(rawValue: notificationPreference.rawValue)!

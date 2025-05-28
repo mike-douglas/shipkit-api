@@ -15,12 +15,20 @@ final class User: Model, @unchecked Sendable {
 
     @Children(for: \.$user)
     var shipments: [ReceivedShipment]
+}
 
-    func toDTO() -> ShipkitUser {
-        .init(
+extension User {
+    func toDTO(on database: any Database) async throws -> ShipkitUser {
+        var deviceDTOs: [ShipkitUserDevice] = []
+
+        for device in try await $devices.query(on: database).all() {
+            try deviceDTOs.append(await device.toDTO(on: database))
+        }
+
+        return .init(
             id: id!,
             mailbox: mailbox,
-            devices: devices.map { $0.toDTO() }
+            devices: deviceDTOs
         )
     }
 }

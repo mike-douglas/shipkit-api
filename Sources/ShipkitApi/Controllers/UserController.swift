@@ -25,10 +25,10 @@ struct UserController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
         let users = routes.grouped(UserAuthenticator()).grouped("user")
 
-        users.post("", use: registerUser)
-        users.put("", use: updateSettings)
+        users.post(use: registerUser)
 
         try users.group(":userId") { user in
+            user.put(use: updateSettings)
             user.get("shipments", use: getUserInbox)
 
             try user.register(collection: ShipmentController())
@@ -62,7 +62,7 @@ struct UserController: RouteCollection {
 
         try await user.save(on: req.db)
 
-        return user.toDTO()
+        return try await user.toDTO(on: req.db)
     }
 
     /// Update the user's settings (push notifications, etc.).
@@ -96,7 +96,7 @@ struct UserController: RouteCollection {
             }
         }
 
-        return user.toDTO()
+        return try await user.toDTO(on: req.db)
     }
 
     @Sendable
@@ -107,8 +107,12 @@ struct UserController: RouteCollection {
             throw Abort(.notFound)
         }
 
-        return try await user.$shipments.query(on: req.db).all().map {
-            $0.toDTO()
+        var shipmentDTOs: [ShipkitUserInboxItem] = []
+
+        for shipment in try await user.$shipments.query(on: req.db).all() {
+            try shipmentDTOs.append(await shipment.toDTO(on: req.db))
         }
+
+        return shipmentDTOs
     }
 }
