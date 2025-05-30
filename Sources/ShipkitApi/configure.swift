@@ -21,7 +21,11 @@ public func configure(_ app: Application) async throws {
     )
 
     // Set up database
-    app.databases.use(DatabaseConfigurationFactory.sqlite(.file("db.sqlite")), as: .sqlite)
+    guard let dbFile = Environment.process.SHIPKIT_SQLITE_DB_FILE else {
+        fatalError("SHIPKIT_SQLITE_DB_FILE environment variable not set")
+    }
+
+    app.databases.use(DatabaseConfigurationFactory.sqlite(.file(dbFile)), as: .sqlite)
     app.caches.use(.memory)
 
     app.migrations.add(CreateUser())

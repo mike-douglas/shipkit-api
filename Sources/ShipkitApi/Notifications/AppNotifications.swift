@@ -42,15 +42,17 @@ struct AppNotifications {
             fatalError("APNS_TOPIC environment variable not set")
         }
 
+        let keyFileContent = try String(contentsOfFile: apnsPrivateKeyFile, encoding: .utf8)
+
         topic = apnsTopic
 
         apnsConfig = try .init(
             authenticationMethod: .jwt(
-                privateKey: .loadFrom(string: apnsPrivateKeyFile),
+                privateKey: .loadFrom(string: keyFileContent),
                 keyIdentifier: apnsKeyIdentifier,
                 teamIdentifier: apnsTeamIdentifier
             ),
-            environment: apnsEnvironment == "developlemt" ? .development : .production
+            environment: apnsEnvironment == "development" ? .development : .production
         )
     }
 }

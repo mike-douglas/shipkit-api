@@ -75,7 +75,30 @@ struct AfterShipWebhookController: RouteCollection {
 
             req.logger.info("Update received for: \(shipment.id), \(shipment.trackingNumber)")
 
-            // TODO: Send notifications
+            guard let userId = shipment.customFields?["userId"] else {
+                req.logger.info("No userId found")
+                throw Abort(.notFound)
+            }
+
+            guard let latestCheckpoint = shipment.checkpoints.sorted(by: { $0.createdAt > $1.createdAt }).first else {
+                req.logger.info("No checkpoints found")
+                throw Abort(.notFound)
+            }
+
+            if let userUUID = UUID(uuidString: userId),
+               let user = try await User.find(userUUID, on: req.db)
+            {
+                let devices = try await user.$devices.query(on: req.db).all()
+
+                req.logger.info("Sending notifications to \(user.mailbox) for \(shipment.id)")
+
+                try await sendNotification(
+                    title: shipment.title,
+                    subtitle: latestCheckpoint.subtagMessage,
+                    with: req,
+                    to: devices.map { $0.deviceId }
+                )
+            }
         } catch {
             req.logger.error("Error: \(error)")
             throw Abort(.internalServerError)

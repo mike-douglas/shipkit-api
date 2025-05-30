@@ -19,16 +19,16 @@ struct UserAuthenticator: AsyncBearerAuthenticator {
     private let metricsToken: String
 
     init() {
-        guard let userToken = Environment.process.USER_TOKEN else {
-            fatalError("USER_TOKEN environment variable not set")
+        guard let userToken = Environment.process.SHIPKIT_USER_TOKEN else {
+            fatalError("SHIPKIT_USER_TOKEN environment variable not set")
         }
 
-        guard let adminToken = Environment.process.ADMIN_TOKEN else {
-            fatalError("ADMIN_TOKEN environment variable not set")
+        guard let adminToken = Environment.process.SHIPKIT_ADMIN_TOKEN else {
+            fatalError("SHIPKIT_ADMIN_TOKEN environment variable not set")
         }
 
-        guard let metricsToken = Environment.process.METRICS_TOKEN else {
-            fatalError("METRICS_TOKEN environment variable not set")
+        guard let metricsToken = Environment.process.SHIPKIT_METRICS_TOKEN else {
+            fatalError("SHIPKIT_METRICS_TOKEN environment variable not set")
         }
 
         self.userToken = userToken
