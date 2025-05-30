@@ -1,5 +1,5 @@
 {
-  "originHash" : "5f1fea19bfa8a3026fe4bce5ebde66a712b2e58930c998db50550eb7bde0e442",
+  "originHash" : "27c314b73388d483b1ac18385edb7628c7b47a8110d79dffdd372c05dc1549c8",
   "pins" : [
     {
       "identity" : "apns",
@@ -97,7 +97,7 @@
       "location" : "ssh://git@github.com/mike-douglas/shipkit-types.git",
       "state" : {
         "branch" : "main",
-        "revision" : "a0ea310b99b82f2b42c968a1813f9cba630716d3"
+        "revision" : "56677f278757aefb3ad08f363b5f36e7f065d230"
       }
     },
     {
@@ -133,7 +133,7 @@
       "location" : "ssh://git@github.com/mike-douglas/swift-aftership.git",
       "state" : {
         "branch" : "main",
-        "revision" : "09d9f8f9ca49003460f69affe1e02051745ce30b"
+        "revision" : "cc69d8489905f1c8e1fcbe4c2c38ed05d55d97ec"
       }
     },
     {
@@ -337,10 +337,10 @@
     {
       "identity" : "swiftemailvalidator",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ekscrypto/SwiftEmailValidator.git",
+      "location" : "https://github.com/mike-douglas/SwiftEmailValidator.git",
       "state" : {
-        "revision" : "521eaed505350164ae5a3ad80457fa8639d0c3a6",
-        "version" : "1.0.4"
+        "branch" : "main",
+        "revision" : "0887de2f5d4b61299f298ac8d698b67ecf7ce829"
       }
     },
     {
@@ -348,8 +348,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ekscrypto/SwiftPublicSuffixList.git",
       "state" : {
-        "revision" : "e59868f29739bb82e5f0db5fcb494e834802403b",
-        "version" : "1.1.6"
+        "branch" : "main",
+        "revision" : "fdcb530170d96c6df8e416f5c0218da147f94da7"
       }
     },
     {

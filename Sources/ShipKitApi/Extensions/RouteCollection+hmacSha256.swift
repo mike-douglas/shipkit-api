@@ -5,7 +5,7 @@
 //  Created by Mike Douglas on 5/26/25.
 //
 
-import CryptoKit
+import Crypto
 import Vapor
 
 extension RouteCollection {

@@ -22,9 +22,11 @@ let package = Package(
         // Metrics
         .package(url: "https://github.com/swift-server/swift-prometheus.git", from: "2.0.0"),
         // Email validation
-        .package(url: "https://github.com/ekscrypto/SwiftEmailValidator.git", from: "1.0.4"),
+        .package(url: "https://github.com/mike-douglas/SwiftEmailValidator.git", branch: "main"),
         // APNS
         .package(url: "https://github.com/vapor/apns.git", from: "4.0.0"),
+        // Crypto
+        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
     ],
     targets: [
         .executableTarget(
@@ -35,11 +37,12 @@ let package = Package(
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "ShipKitTypes", package: "shipkit-types"),
-                .product(name: "AfterShip", package: "swift-aftership"),
                 .product(name: "Prometheus", package: "swift-prometheus"),
                 .product(name: "SwiftEmailValidator", package: "SwiftEmailValidator"),
                 .product(name: "VaporAPNS", package: "apns"),
+                .product(name: "ShipKitTypes", package: "shipkit-types"),
+                .product(name: "AfterShip", package: "swift-aftership"),
+                .product(name: "Crypto", package: "swift-crypto"),
             ],
             swiftSettings: swiftSettings
         ),

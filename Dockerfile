@@ -7,7 +7,14 @@ FROM swift:6.0-noble AS build
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
     && apt-get -q update \
     && apt-get -q dist-upgrade -y \
-    && apt-get install -y libjemalloc-dev
+    && apt-get install -y libjemalloc-dev openssh-client
+
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
+COPY id_ed25519 /root/.ssh/id_ed25519
+COPY id_ed25519.pub /root/.ssh/id_ed25519.pub
+RUN chmod 600 /root/.ssh/id_ed25519
+
+RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 
 # Set up a build area
 WORKDIR /build
@@ -26,7 +33,7 @@ COPY . .
 # Build the application, with optimizations, with static linking, and using jemalloc
 # N.B.: The static version of jemalloc is incompatible with the static Swift runtime.
 RUN swift build -c release \
-        --product ShipkitApi \
+        --product ShipKitApi \
         --static-swift-stdlib \
         -Xlinker -ljemalloc
 
@@ -34,7 +41,7 @@ RUN swift build -c release \
 WORKDIR /staging
 
 # Copy main executable to staging area
-RUN cp "$(swift build --package-path /build -c release --show-bin-path)/ShipkitApi" ./
+RUN cp "$(swift build --package-path /build -c release --show-bin-path)/ShipKitApi" ./
 
 # Copy static swift backtracer binary to staging area
 RUN cp "/usr/libexec/swift/linux/swift-backtrace-static" ./
@@ -85,5 +92,5 @@ USER vapor:vapor
 EXPOSE 8080
 
 # Start the Vapor service when the image is run, default to listening on 8080 in production environment
-ENTRYPOINT ["./ShipkitApi"]
+ENTRYPOINT ["./ShipKitApi"]
 CMD ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8080"]
