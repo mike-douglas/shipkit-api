@@ -27,6 +27,8 @@ let package = Package(
         .package(url: "https://github.com/vapor/apns.git", from: "4.0.0"),
         // Crypto
         .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
+        // Redis
+        .package(url: "https://github.com/vapor/redis.git", from: "4.0.0"),
     ],
     targets: [
         .executableTarget(
@@ -43,6 +45,7 @@ let package = Package(
                 .product(name: "ShipKitTypes", package: "shipkit-types"),
                 .product(name: "AfterShip", package: "swift-aftership"),
                 .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "Redis", package: "redis"),
             ],
             swiftSettings: swiftSettings
         ),

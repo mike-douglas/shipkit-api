@@ -3,6 +3,7 @@ import FluentSQLiteDriver
 import Metrics
 import NIOSSL
 import Prometheus
+import Redis
 import Vapor
 import VaporAPNS
 
@@ -27,6 +28,17 @@ public func configure(_ app: Application) async throws {
 
     app.databases.use(DatabaseConfigurationFactory.sqlite(.file(dbFile)), as: .sqlite)
     app.caches.use(.memory)
+
+    // Set up Redis connection
+    guard let celeryBroker = Environment.process.CELERY_BROKER_URL else {
+        fatalError("CELERY_BROKER_URL environment variable not set")
+    }
+
+    guard let celeryResultBackend = Environment.process.CELERY_RESULT_BACKEND else {
+        fatalError("CELERY_RESULT_BACKEND environment variable not set")
+    }
+
+    app.redis.configuration = try RedisConfiguration(hostname: celeryBroker)
 
     app.migrations.add(CreateUser())
     app.migrations.add(CreateReceivedShipments())
