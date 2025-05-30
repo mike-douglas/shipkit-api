@@ -1,5 +1,6 @@
 import Fluent
 import struct Foundation.UUID
+import ShipKitTypes
 
 final class User: Model, @unchecked Sendable {
     static let schema = "users"

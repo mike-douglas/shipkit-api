@@ -8,6 +8,7 @@
 import Fluent
 import struct Foundation.Date
 import struct Foundation.UUID
+import ShipKitTypes
 
 final class ReceivedShipment: Model, @unchecked Sendable {
     static let schema = "received_shipments"

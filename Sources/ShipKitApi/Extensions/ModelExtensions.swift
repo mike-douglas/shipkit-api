@@ -6,6 +6,7 @@
 //
 
 import AfterShip
+import ShipKitTypes
 
 private extension String {
     var withLowercasedFirstCharacter: String {
