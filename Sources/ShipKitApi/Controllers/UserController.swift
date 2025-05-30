@@ -9,27 +9,6 @@ import Fluent
 import ShipKitTypes
 import Vapor
 
-extension ShipKitUser: @retroactive AsyncResponseEncodable {}
-extension ShipKitUser: @retroactive AsyncRequestDecodable {}
-extension ShipKitUser: @retroactive ResponseEncodable {}
-extension ShipKitUser: @retroactive RequestDecodable {}
-extension ShipKitUser: @retroactive Content, @unchecked @retroactive Sendable {
-    func toModel() -> User {
-        let model = User()
-
-        model.id = id
-        model.mailbox = mailbox
-
-        return model
-    }
-}
-
-extension ShipKitUserInboxItem: @retroactive AsyncResponseEncodable {}
-extension ShipKitUserInboxItem: @retroactive AsyncRequestDecodable {}
-extension ShipKitUserInboxItem: @retroactive ResponseEncodable {}
-extension ShipKitUserInboxItem: @retroactive RequestDecodable {}
-extension ShipKitUserInboxItem: @retroactive Content, @unchecked @retroactive Sendable {}
-
 struct UserController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
         let users = routes.grouped(UserAuthenticator()).grouped("user")

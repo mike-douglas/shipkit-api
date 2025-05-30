@@ -8,12 +8,6 @@
 import ShipKitTypes
 import Vapor
 
-extension ShipKitAppSettings: @retroactive AsyncResponseEncodable {}
-extension ShipKitAppSettings: @retroactive AsyncRequestDecodable {}
-extension ShipKitAppSettings: @retroactive ResponseEncodable {}
-extension ShipKitAppSettings: @retroactive RequestDecodable {}
-extension ShipKitAppSettings: @retroactive Content, @unchecked @retroactive Sendable {}
-
 struct AppSettingsController: RouteCollection {
     let emailDomain: String
 

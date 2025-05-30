@@ -10,22 +10,6 @@ import Fluent
 import ShipKitTypes
 import Vapor
 
-extension ShipKitShipment: @retroactive AsyncResponseEncodable {}
-extension ShipKitShipment: @retroactive AsyncRequestDecodable {}
-extension ShipKitShipment: @retroactive ResponseEncodable {}
-extension ShipKitShipment: @retroactive RequestDecodable {}
-extension ShipKitShipment: @retroactive Content, @unchecked @retroactive Sendable {}
-extension ShipKitShipmentUpdate: @retroactive AsyncResponseEncodable {}
-extension ShipKitShipmentUpdate: @retroactive AsyncRequestDecodable {}
-extension ShipKitShipmentUpdate: @retroactive ResponseEncodable {}
-extension ShipKitShipmentUpdate: @retroactive RequestDecodable {}
-extension ShipKitShipmentUpdate: @retroactive Content, @unchecked @retroactive Sendable {}
-extension ShipKitCarrier: @retroactive AsyncResponseEncodable {}
-extension ShipKitCarrier: @retroactive AsyncRequestDecodable {}
-extension ShipKitCarrier: @retroactive ResponseEncodable {}
-extension ShipKitCarrier: @retroactive RequestDecodable {}
-extension ShipKitCarrier: @retroactive Content, @unchecked @retroactive Sendable {}
-
 struct ShipmentController: RouteCollection {
     private let client: AfterShipClient
 
