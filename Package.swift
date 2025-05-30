@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "ShipkitApi",
+    name: "ShipKitApi",
     platforms: [
         .macOS(.v13),
     ],
@@ -15,6 +15,8 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.6.0"),
         // 🔵 Non-blocking, event-driven networking for Swift. Used for custom executors
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
+        // ShipKit Data Types
+        .package(url: "ssh://git@github.com/mike-douglas/shipkit-types.git", branch: "main"),
         // AfterShip API Client
         .package(url: "ssh://git@github.com/mike-douglas/swift-aftership.git", branch: "main"),
         // Metrics
@@ -26,13 +28,14 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "ShipkitApi",
+            name: "ShipKitApi",
             dependencies: [
                 .product(name: "Fluent", package: "fluent"),
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "ShipKitTypes", package: "shipkit-types"),
                 .product(name: "AfterShip", package: "swift-aftership"),
                 .product(name: "Prometheus", package: "swift-prometheus"),
                 .product(name: "SwiftEmailValidator", package: "SwiftEmailValidator"),
@@ -41,9 +44,9 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .testTarget(
-            name: "ShipkitApiTests",
+            name: "ShipKitApiTests",
             dependencies: [
-                .target(name: "ShipkitApi"),
+                .target(name: "ShipKitApi"),
                 .product(name: "VaporTesting", package: "vapor"),
             ],
             swiftSettings: swiftSettings

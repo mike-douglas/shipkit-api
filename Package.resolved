@@ -1,5 +1,5 @@
 {
-  "originHash" : "dc56e1ae7d7917ceb8f8210ebfe38d1e5633e4f1bf6222462e596b1cdeab48a2",
+  "originHash" : "5f1fea19bfa8a3026fe4bce5ebde66a712b2e58930c998db50550eb7bde0e442",
   "pins" : [
     {
       "identity" : "apns",
@@ -89,6 +89,15 @@
       "state" : {
         "revision" : "93f7222c8e195cbad39fafb5a0e4cc85a8def7ea",
         "version" : "4.9.2"
+      }
+    },
+    {
+      "identity" : "shipkit-types",
+      "kind" : "remoteSourceControl",
+      "location" : "ssh://git@github.com/mike-douglas/shipkit-types.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "405dfed813bec2d6439fb99043d00b582ca66fac"
       }
     },
     {
