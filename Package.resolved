@@ -1,5 +1,5 @@
 {
-  "originHash" : "27c314b73388d483b1ac18385edb7628c7b47a8110d79dffdd372c05dc1549c8",
+  "originHash" : "b5a65940095a087ecda9961ce86b9783f37f89047f4d1fd8535e8918830d19f2",
   "pins" : [
     {
       "identity" : "apns",
@@ -296,6 +296,15 @@
       "state" : {
         "revision" : "e0ec0f5f3af6f3e4d5e7a19d2af26b481acb6ba8",
         "version" : "1.0.3"
+      }
+    },
+    {
+      "identity" : "swift-orinoco",
+      "kind" : "remoteSourceControl",
+      "location" : "ssh://git@github.com/mike-douglas/swift-orinoco.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "455302629f2b5c5c2e119b6517654eed4b442459"
       }
     },
     {

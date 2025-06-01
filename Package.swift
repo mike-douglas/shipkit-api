@@ -19,6 +19,8 @@ let package = Package(
         .package(url: "ssh://git@github.com/mike-douglas/shipkit-types.git", branch: "main"),
         // AfterShip API Client
         .package(url: "ssh://git@github.com/mike-douglas/swift-aftership.git", branch: "main"),
+        // Orinoco task runner
+        .package(url: "ssh://git@github.com/mike-douglas/swift-orinoco.git", branch: "main"),
         // Metrics
         .package(url: "https://github.com/swift-server/swift-prometheus.git", from: "2.0.0"),
         // Email validation
@@ -43,6 +45,7 @@ let package = Package(
                 .product(name: "ShipKitTypes", package: "shipkit-types"),
                 .product(name: "AfterShip", package: "swift-aftership"),
                 .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "Orinoco", package: "swift-orinoco"),
             ],
             swiftSettings: swiftSettings
         ),

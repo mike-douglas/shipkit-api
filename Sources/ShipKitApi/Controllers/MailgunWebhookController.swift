@@ -39,14 +39,20 @@ private struct MailgunWebhookMessage: Content, Codable {
 }
 
 struct MailgunWebhookController: RouteCollection {
-    private let client: AfterShipClient
+    private let afterShipClient: AfterShipClient
+    private let emailParser: EmailParser
 
     init() {
         guard let apiKey = Environment.process.AFTERSHIP_API_KEY else {
             fatalError("AFTERSHIP_API_KEY environment variable not set")
         }
 
-        client = AfterShipClient(apiKey: apiKey)
+        guard let orinocoApiUrlString = Environment.process.ORINOCO_API_URL else {
+            fatalError("ORINOCO_API_URL environment variable not set")
+        }
+
+        afterShipClient = AfterShipClient(apiKey: apiKey)
+        emailParser = EmailParser(clientUrl: URL(string: orinocoApiUrlString)!)
     }
 
     func boot(routes: any RoutesBuilder) throws {
@@ -77,7 +83,7 @@ struct MailgunWebhookController: RouteCollection {
                 throw Abort(.badRequest, reason: "Invalid recipient email address")
             }
 
-            guard let _ = message.bodyPlain else {
+            guard let body = message.bodyPlain else {
                 throw Abort(.badRequest, reason: "Missing email body")
             }
 
@@ -98,30 +104,37 @@ struct MailgunWebhookController: RouteCollection {
                 throw Abort(.notFound, reason: "User not found")
             }
 
-            // TODO: Detect tracking number, title, and carrier from the body of the email
-            let trackingNumber = "1Z23456789"
-            // let title = "Test Package"
-            // let carrier = "USPS"
-            let shipmentId: String
+            if let trackingInfo = try await emailParser.detectTrackingFromEmail(body),
+               let trackingNumber = trackingInfo.first?.trackingNumber,
+               let title = trackingInfo.first?.title
+            {
+                req.logger.info("Detected tracking number: \(trackingNumber)")
 
-            // Start tracking the shipment
-            guard let shipment = try await client.createTracking(trackingNumber: trackingNumber) else {
-                throw Abort(.internalServerError)
+                guard let shipment = try await afterShipClient.createTracking(
+                    trackingNumber: trackingNumber,
+                    title: title,
+                    customFields: ["userId": user.id!.uuidString]
+                ) else {
+                    throw Abort(.internalServerError, reason: "Create tracking error")
+                }
+
+                let shipmentId = shipment.id
+
+                // Create a new shipment record
+                let newShipment = ReceivedShipment()
+
+                newShipment.receivedAt = .now
+                newShipment.shipmentId = shipmentId
+                newShipment.trackingNumber = trackingNumber
+
+                // Save to user
+                try await user.$shipments.create(newShipment, on: req.db)
+
+                AppMetrics.shared.packagesCounter(source: .email).increment(by: 1)
+            } else {
+                req.logger.info("No tracking information found in email")
+                // TODO: Track failure
             }
-
-            shipmentId = shipment.id
-
-            // Create a new shipment record
-            let newShipment = ReceivedShipment()
-
-            newShipment.receivedAt = .now
-            newShipment.shipmentId = shipmentId
-            newShipment.trackingNumber = trackingNumber
-
-            // Save to user
-            try await user.$shipments.create(newShipment, on: req.db)
-
-            AppMetrics.shared.packagesCounter(source: .email).increment(by: 1)
         } catch {
             req.logger.error("Error: \(error)")
             throw Abort(.internalServerError)
