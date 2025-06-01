@@ -19,8 +19,6 @@ x-shared_environment: &shared_environment
 services:
   app:
     image: ghcr.io/mike-douglas/shipkit-api:1.0-stage
-    build:
-      context: .
     environment:
       <<: *shared_environment
     volumes:
@@ -35,8 +33,6 @@ services:
 
   migrate:
     image: ghcr.io/mike-douglas/shipkit-api:1.0-stage
-    build:
-      context: .
     environment:
       <<: *shared_environment
     volumes:
@@ -50,8 +46,6 @@ services:
 
   revert:
     image: ghcr.io/mike-douglas/shipkit-api:1.0-stage
-    build:
-      context: .
     volumes:
       - /apps/shipkit-apiv2/data/stage:/data
       - /apps/shipkit-apiv2/deploy/stage/env:/app/.env
