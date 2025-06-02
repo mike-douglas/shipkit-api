@@ -18,7 +18,7 @@ x-shared_environment: &shared_environment
   
 services:
   app:
-    image: shipkit-api:latest
+    image: ghcr.io/mike-douglas/shipkit-api:prod
     build:
       context: .
     environment:
@@ -34,7 +34,7 @@ services:
       - apps
 
   migrate:
-    image: shipkit-api:latest
+    image: ghcr.io/mike-douglas/shipkit-api:prod
     build:
       context: .
     environment:
@@ -49,7 +49,7 @@ services:
       - apps
 
   revert:
-    image: shipkit-api:latest
+    image: ghcr.io/mike-douglas/shipkit-api:prod
     build:
       context: .
     volumes:
