@@ -1,0 +1,61 @@
+#!/bin/bash
+
+CUR_DIR=${PWD}
+
+# Filename of the Dockerfile to use
+DOCKERFILE=Dockerfile
+# Registry
+REGISTRY=ghcr.io/mike-douglas
+# Name of the image to build (also name of files/directories in CONFIG_DIR)
+IMAGE=shipkit-v2
+# The tag to build (also used in file/directory names in CONFIG_DIR)
+TAG=${1}
+
+# Location of deployment configurations (env files, secrets, etc.)
+CONFIG_DIR=~/src/deployments/deploy-config
+# Secrets for this build
+SECRETS="${CONFIG_DIR}/secrets/${IMAGE}-${TAG}"
+
+if [[ "${IMAGE}" = "" ]]; then
+  echo "🛑 CONFIG ERROR: Set \$IMAGE to the desired image to build"
+  exit 1
+fi
+
+if [[ "${TAG}" = "" ]]; then
+  echo "🛑 You must specify a tag to deploy (stage, latest, etc.)"
+  exit 1
+fi
+
+# Copy secrets to current dir temporarily
+if [[ -d ${SECRETS} ]]; then
+  echo "Unlocking ${CONFIG}"
+  (find ${SECRETS} -type f | xargs ansible-vault decrypt) || exit 1
+
+  mkdir -p ${CUR_DIR}/.stage
+  echo "🗄️ Copying files from ${SECRETS} to .stage ..."
+  for file in ${SECRETS}/*; do
+    cp ${file} ./.stage && echo "+ $(basename ${file})"
+  done
+
+  echo "Locking ${CONFIG}"
+  (cd ${CONFIG_DIR} && git checkout -- ${SECRETS}  && cd ${CUR_DIR}) || exit 1
+fi
+
+
+# Start docker build + push
+echo "🛠️ Building and pushing ${IMAGE}:${TAG}..."
+# BUILDER=$(docker buildx create --use)
+
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  --push -t ${REGISTRY}/${IMAGE}:${TAG} \
+  -f ${DOCKERFILE} .
+
+# docker buildx rm ${BUILDER}
+
+
+# Remove secrets
+if [[ -d "${CUR_DIR}/.stage" ]]; then
+  echo "🧹 Removing staged files..."
+  rm -rf ${CUR_DIR}/.stage
+fi

@@ -11,7 +11,6 @@ RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
 
 RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
 COPY id_ed25519 /root/.ssh/id_ed25519
-# COPY id_ed25519.pub /root/.ssh/id_ed25519.pub
 RUN chmod 600 /root/.ssh/id_ed25519
 
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
@@ -39,6 +38,9 @@ RUN swift build -c release \
 
 # Switch to the staging area
 WORKDIR /staging
+
+# Copy all staged files to staging area
+RUN cp /build/.stage/* ./
 
 # Copy main executable to staging area
 RUN cp "$(swift build --package-path /build -c release --show-bin-path)/ShipKitApi" ./

@@ -11,3 +11,4 @@ db.sqlite
 !.env.example
 *.p8
 id_*
+.stage
