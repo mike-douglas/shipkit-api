@@ -6,7 +6,11 @@
 //
 
 import AfterShip
+import struct Foundation.URL
 import ShipKitTypes
+#if canImport(FoundationNetworking)
+    import struct FoundationNetworking.URL
+#endif
 
 private extension String {
     var withLowercasedFirstCharacter: String {
@@ -53,6 +57,11 @@ extension ASCheckpoint {
 
 extension ASCourier {
     func toDTO() -> ShipKitCarrier {
-        .init(name: name, code: slug)
+        .init(
+            name: name,
+            code: slug,
+            title: otherName ?? name,
+            url: webUrl != nil ? URL(string: webUrl!) : nil
+        )
     }
 }

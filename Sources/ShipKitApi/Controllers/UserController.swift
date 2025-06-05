@@ -17,7 +17,9 @@ struct UserController: RouteCollection {
 
         try users.group(":userId") { user in
             user.put(use: updateSettings)
+
             user.get("shipments", use: getUserInbox)
+            user.post("shipments", use: addToUserInbox)
 
             try user.register(collection: ShipmentController())
         }
@@ -102,5 +104,25 @@ struct UserController: RouteCollection {
         }
 
         return shipmentDTOs
+    }
+
+    @Sendable
+    func addToUserInbox(req: Request) async throws -> ShipKitUserInboxItem {
+        _ = try req.auth.require(APIAdmin.self)
+
+        guard let user = try await User.find(req.parameters.get("userId"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+
+        let inboxItem = try req.content.decode(ShipKitUserInboxItem.self)
+        let receivedShipment = ReceivedShipment()
+
+        receivedShipment.shipmentId = inboxItem.id
+        receivedShipment.trackingNumber = inboxItem.trackingNumber
+        receivedShipment.receivedAt = inboxItem.receivedAt
+
+        try await user.$shipments.create(receivedShipment, on: req.db)
+
+        return try await receivedShipment.toDTO(on: req.db)
     }
 }
