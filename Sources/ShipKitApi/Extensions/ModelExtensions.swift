@@ -8,9 +8,6 @@
 import AfterShip
 import struct Foundation.URL
 import ShipKitTypes
-#if canImport(FoundationNetworking)
-    import struct FoundationNetworking.URL
-#endif
 
 private extension String {
     var withLowercasedFirstCharacter: String {
