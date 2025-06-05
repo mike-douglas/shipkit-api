@@ -30,6 +30,7 @@ public func configure(_ app: Application) async throws {
 
     app.migrations.add(CreateUser())
     app.migrations.add(CreateReceivedShipments())
+    app.migrations.add(CreateMigratedShipments())
     app.migrations.add(CreateUserDevice())
 
     try routes(app)

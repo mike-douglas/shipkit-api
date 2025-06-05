@@ -27,6 +27,10 @@ struct ShipmentController: RouteCollection {
         shipments.post(use: startTracking)
         shipments.get("carrier", use: detectCarrierForTracking)
 
+        // Migration endpoints for v1 endpoint
+        shipments.get(use: findMigratedShipment)
+        shipments.post("migrations", use: addMigratedShipments)
+
         shipments.group(":shipmentId") { shipment in
             shipment.get(use: self.getLatestTrackingUpdates)
             shipment.put(use: self.updateTracking)
@@ -209,5 +213,44 @@ struct ShipmentController: RouteCollection {
             req.logger.error("Error getting shipment: \(error)")
             throw Abort(.internalServerError)
         }
+    }
+
+    /// Insert trackingNumber + shipmentID used in migration from v1 -> v2.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: HTTP Status
+    @Sendable
+    func addMigratedShipments(req: Request) async throws -> HTTPStatus {
+        _ = try req.auth.require(APIAdmin.self)
+
+        let shipmentsToMigrate = try req.content.decode([MigratedShipment].self)
+
+        for migratedShipment in shipmentsToMigrate {
+            try await migratedShipment.save(on: req.db)
+        }
+
+        return .created
+    }
+
+    /// Find a migrated shipment from v1 by tracking number and return the ShipmentId to be used in this API.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: The shipment ID if it exists
+    @Sendable
+    func findMigratedShipment(req: Request) async throws -> ShipKitShipmentId {
+        _ = try req.auth.require(APIUser.self)
+
+        guard let userId = req.parameters.get("userId") else {
+            throw Abort(.badRequest)
+        }
+
+        let findByTrackingRequest = try req.query.decode(ShipKitFindByTrackingRequest.self)
+        let trackingNumber = findByTrackingRequest.trackingNumber
+
+        guard let migratedShipment = try await MigratedShipment.query(on: req.db).filter(\.$trackingNumber == trackingNumber).first() else {
+            throw Abort(.notFound)
+        }
+
+        return migratedShipment.shipmentId
     }
 }

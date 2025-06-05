@@ -19,6 +19,6 @@ struct CreateReceivedShipments: AsyncMigration {
     }
 
     func revert(on database: any Database) async throws {
-        try await database.schema("user_inbox_items").delete()
+        try await database.schema("received_shipments").delete()
     }
 }

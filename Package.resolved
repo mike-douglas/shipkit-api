@@ -97,7 +97,7 @@
       "location" : "ssh://git@github.com/mike-douglas/shipkit-types.git",
       "state" : {
         "branch" : "main",
-        "revision" : "1edf30b5963a5298f4f15775fa5f4ca6274710c5"
+        "revision" : "ab63177a8a9ee7bd47c03e5c99b6a05b5f1589c7"
       }
     },
     {
