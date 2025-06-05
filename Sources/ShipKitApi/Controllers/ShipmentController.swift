@@ -26,15 +26,18 @@ struct ShipmentController: RouteCollection {
 
         shipments.post(use: startTracking)
         shipments.get("carrier", use: detectCarrierForTracking)
+
         shipments.group(":shipmentId") { shipment in
             shipment.get(use: self.getLatestTrackingUpdates)
+            shipment.put(use: self.updateTracking)
+            shipment.delete(use: self.stopTracking)
         }
     }
 
     /// Create a new shipment and register it with the shipment tracker.
     ///
     /// - Parameter req: Request
-    /// - Returns: HTTP Status
+    /// - Returns: The Shipment
     @Sendable
     func startTracking(req: Request) async throws -> ShipKitShipment {
         _ = try req.auth.require(APIUser.self)
@@ -64,15 +67,70 @@ struct ShipmentController: RouteCollection {
         }
     }
 
+    /// Update an existing shipment.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: The Shipment
     @Sendable
-    func updateTracking(req _: Request) async throws -> HTTPStatus {
-        return .notImplemented
+    func updateTracking(req: Request) async throws -> ShipKitShipment {
+        _ = try req.auth.require(APIUser.self)
+
+        guard let shipmentId = req.parameters.get("shipmentId") else {
+            throw Abort(.badRequest)
+        }
+
+        let updateRequest = try req.content.decode(ShipKitUpdateShipmentRequest.self)
+        var customFields: [String: String] = [:]
+
+        if let userId = updateRequest.userId {
+            customFields["userId"] = userId.uuidString
+        }
+
+        do {
+            if let updateResponse = try await client.updateTracking(
+                shipmentId,
+                title: updateRequest.title,
+                customFields: customFields,
+                carrierSlug: updateRequest.carrier
+            ) {
+                return updateResponse.toDTO()
+            } else {
+                throw Abort(.internalServerError)
+            }
+        } catch {
+            req.logger.error("Error updating shipment: \(error)")
+            throw Abort(.internalServerError)
+        }
+    }
+
+    /// Stop tracking a shipment (and no longer receive webhook updates).
+    ///
+    /// - Parameter req: Request
+    /// - Returns: HTTP Status
+    @Sendable
+    func stopTracking(req: Request) async throws -> HTTPStatus {
+        _ = try req.auth.require(APIUser.self)
+
+        guard let shipmentId = req.parameters.get("shipmentId") else {
+            throw Abort(.badRequest)
+        }
+
+        do {
+            if let deleteResponse = try await client.deleteTracking(shipmentId) {
+                return .ok
+            } else {
+                throw Abort(.internalServerError)
+            }
+        } catch {
+            req.logger.error("Error deleting shipment: \(error)")
+            throw Abort(.internalServerError)
+        }
     }
 
     /// Get the latest update for a shipment.
     ///
     /// - Parameter req: Request
-    /// - Returns: HTTP Status
+    /// - Returns: The Shipment
     @Sendable
     func getLatestTrackingUpdates(req: Request) async throws -> ShipKitShipment {
         _ = try req.auth.require(APIUser.self)
@@ -109,6 +167,10 @@ struct ShipmentController: RouteCollection {
         }
     }
 
+    /// Detect the carrier for a shipment by tracking number.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: An Array of possible Carriers
     @Sendable
     func detectCarrierForTracking(req: Request) async throws -> [ShipKitCarrier] {
         _ = try req.auth.require(APIUser.self)
