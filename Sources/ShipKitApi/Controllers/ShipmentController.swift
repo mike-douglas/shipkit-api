@@ -120,7 +120,7 @@ struct ShipmentController: RouteCollection {
         }
 
         do {
-            if let deleteResponse = try await client.deleteTracking(shipmentId) {
+            if try await client.deleteTracking(shipmentId) != nil {
                 return .ok
             } else {
                 throw Abort(.internalServerError)
@@ -240,7 +240,7 @@ struct ShipmentController: RouteCollection {
     func findMigratedShipment(req: Request) async throws -> ShipKitShipmentId {
         _ = try req.auth.require(APIUser.self)
 
-        guard let userId = req.parameters.get("userId") else {
+        guard let _ = req.parameters.get("userId") else {
             throw Abort(.badRequest)
         }
 
