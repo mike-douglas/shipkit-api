@@ -50,7 +50,8 @@ struct ShipmentController: RouteCollection {
             if let trackingResponse = try await client.createTracking(
                 trackingNumber: trackingRequest.trackingNumber,
                 title: trackingRequest.title,
-                customFields: customFields
+                customFields: customFields,
+                carrierSlug: nil
             ) {
                 AppMetrics.shared.packagesCounter(source: .api).increment(by: 1)
                 return trackingResponse.toDTO()
