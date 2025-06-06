@@ -97,6 +97,8 @@ struct AfterShipWebhookController: RouteCollection {
                     with: req,
                     to: devices.map { $0.deviceId }
                 )
+
+                AppMetrics.shared.notificationCounter().increment(by: 1)
             }
         } catch {
             req.logger.error("Error: \(error)")

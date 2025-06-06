@@ -110,6 +110,8 @@ struct UserController: RouteCollection {
             try await shipment.delete(on: req.db)
         }
 
+        AppMetrics.shared.inboxSizeRecorder().record(Int64(shipmentDTOs.count))
+
         return shipmentDTOs
     }
 
