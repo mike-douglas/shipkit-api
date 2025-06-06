@@ -14,6 +14,7 @@ struct UserController: RouteCollection {
         let users = routes.grouped(UserAuthenticator()).grouped("user")
 
         users.post(use: registerUser)
+        users.post("migrations", use: addMigratedUsers)
 
         try users.group(":userId") { user in
             user.put(use: updateSettings)
@@ -38,7 +39,7 @@ struct UserController: RouteCollection {
         return String(randomString)
     }
 
-    /// Register a new user
+    /// Register a new user.
     ///
     /// - Parameter req: Request
     /// - Returns: The created users, with ID and mailbox
@@ -90,6 +91,10 @@ struct UserController: RouteCollection {
         return try await user.toDTO(on: req.db)
     }
 
+    /// Get all the items in the user's inbox, then delete them.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: Array of inbox items for the user
     @Sendable
     func getUserInbox(req: Request) async throws -> [ShipKitUserInboxItem] {
         _ = try req.auth.require(APIUser.self)
@@ -102,11 +107,16 @@ struct UserController: RouteCollection {
 
         for shipment in try await user.$shipments.query(on: req.db).all() {
             try shipmentDTOs.append(await shipment.toDTO(on: req.db))
+            try await shipment.delete(on: req.db)
         }
 
         return shipmentDTOs
     }
 
+    /// Add an item to the user inbox. This is an admin function.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: The item added
     @Sendable
     func addToUserInbox(req: Request) async throws -> ShipKitUserInboxItem {
         _ = try req.auth.require(APIAdmin.self)
@@ -125,5 +135,28 @@ struct UserController: RouteCollection {
         try await user.$shipments.create(receivedShipment, on: req.db)
 
         return try await receivedShipment.toDTO(on: req.db)
+    }
+
+    /// Migration endpoint for users to help in v1->v2 migration. This is an admin function.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: HTTP Status
+    @Sendable
+    func addMigratedUsers(req: Request) async throws -> HTTPStatus {
+        _ = try req.auth.require(APIAdmin.self)
+
+        let usersToMigrate = try req.content.decode([ShipKitUser].self)
+
+        for migratedUser in usersToMigrate {
+            let user = migratedUser.toModel()
+
+            try await user.create(on: req.db)
+
+            for device in migratedUser.devices {
+                try await user.$devices.create(device.toModel(), on: req.db)
+            }
+        }
+
+        return .created
     }
 }

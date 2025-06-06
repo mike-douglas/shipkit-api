@@ -9,7 +9,7 @@ import Fluent
 import ShipKitTypes
 
 enum UserDeviceNotificationPreference: String, Codable {
-    case allUpdates
+    case allUpdates, onDelivery, onTruckForDelivery, none
 }
 
 enum UserDeviceNotificationEnvironment: String, Codable {
