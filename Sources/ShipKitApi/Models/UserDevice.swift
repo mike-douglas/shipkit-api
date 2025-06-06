@@ -12,6 +12,10 @@ enum UserDeviceNotificationPreference: String, Codable {
     case allUpdates
 }
 
+enum UserDeviceNotificationEnvironment: String, Codable {
+    case development, production
+}
+
 final class UserDevice: Model, @unchecked Sendable {
     static let schema = "user_devices"
 
@@ -24,6 +28,9 @@ final class UserDevice: Model, @unchecked Sendable {
     @Field(key: "notificationPreference")
     var notificationPreference: UserDeviceNotificationPreference
 
+    @Field(key: "environment")
+    var environment: UserDeviceNotificationEnvironment
+
     @Parent(key: "userId")
     var user: User
 }
@@ -32,7 +39,8 @@ extension UserDevice {
     func toDTO(on _: any Database) async throws -> ShipKitUserDevice {
         .init(
             deviceId: deviceId,
-            notificationPreference: .init(rawValue: notificationPreference.rawValue)!
+            notificationPreference: .init(rawValue: notificationPreference.rawValue)!,
+            environment: environment == .production ? .production : .development
         )
     }
 }

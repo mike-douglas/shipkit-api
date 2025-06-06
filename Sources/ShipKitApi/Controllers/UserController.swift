@@ -81,6 +81,7 @@ struct UserController: RouteCollection {
 
                 newDevice.deviceId = deviceUpdate.deviceId
                 newDevice.notificationPreference = .init(rawValue: deviceUpdate.notificationPreference.rawValue) ?? .allUpdates
+                newDevice.environment = deviceUpdate.environment == .production ? .production : .development
 
                 try await user.$devices.create(newDevice, on: req.db)
             }
