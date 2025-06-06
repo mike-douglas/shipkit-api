@@ -6,6 +6,7 @@
 //
 
 import AfterShip
+import struct Foundation.URL
 import ShipKitTypes
 
 private extension String {
@@ -53,6 +54,11 @@ extension ASCheckpoint {
 
 extension ASCourier {
     func toDTO() -> ShipKitCarrier {
-        .init(name: name, code: slug)
+        .init(
+            name: name,
+            code: slug,
+            summary: otherName ?? name,
+            url: webUrl != nil ? URL(string: webUrl!) : nil
+        )
     }
 }
