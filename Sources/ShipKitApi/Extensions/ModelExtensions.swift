@@ -57,7 +57,7 @@ extension ASCourier {
         .init(
             name: name,
             code: slug,
-            title: otherName ?? name,
+            summary: otherName ?? name,
             url: webUrl != nil ? URL(string: webUrl!) : nil
         )
     }
