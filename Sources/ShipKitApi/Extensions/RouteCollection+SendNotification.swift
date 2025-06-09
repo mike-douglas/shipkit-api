@@ -19,7 +19,7 @@ extension RouteCollection {
             ),
             expiration: .immediately,
             priority: .immediately,
-            topic: ""
+            topic: AppNotifications.shared.topic
         )
 
         for token in tokens {
