@@ -53,12 +53,12 @@ struct AfterShipWebhookController: RouteCollection {
         let aftership = routes.grouped("aftership")
 
         aftership.post(use: incomingWebhook)
-        aftership.post("notify", use: sendNotificationTest)
+        aftership.grouped(UserAuthenticator()).post("notify", use: sendNotificationTest)
     }
 
     @Sendable
     func sendNotificationTest(req: Request) async throws -> HTTPStatus {
-//        _ = try req.auth.require(APIAdmin.self)
+        _ = try req.auth.require(APIAdmin.self)
 
         let message = try req.content.decode(NotificationMessage.self)
 
