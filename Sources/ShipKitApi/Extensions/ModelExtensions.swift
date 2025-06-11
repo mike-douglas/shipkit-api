@@ -20,12 +20,12 @@ private extension String {
 }
 
 extension ASTracking {
-    func toDTO() -> ShipKitShipment {
+    func toDTO(usingCarriers carriers: [String: ShipKitCarrier]) -> ShipKitShipment {
         .init(
             id: id,
             title: title,
             trackingNumber: trackingNumber,
-            carrier: slug,
+            carrier: carriers[slug] ?? ShipKitCarrier(name: "Unknown", code: "unknown", summary: "Unknown Carrier"),
             updates: checkpoints.map { $0.toDTO() },
             deliveryDate: courierEstimatedDeliveryDate?.estimatedDeliveryDate,
             timestamp: updatedAt

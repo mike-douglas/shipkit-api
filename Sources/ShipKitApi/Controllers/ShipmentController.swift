@@ -60,8 +60,13 @@ struct ShipmentController: RouteCollection {
                 customFields: customFields,
                 carrierSlug: trackingRequest.carrierSlug
             ) {
+                guard let carrier = try await client.getCourier(withSlug: trackingResponse.slug) else {
+                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(trackingResponse.slug)")
+                }
+
                 AppMetrics.shared.packagesCounter(source: .api).increment(by: 1)
-                return trackingResponse.toDTO()
+
+                return trackingResponse.toDTO(usingCarriers: [trackingResponse.slug: carrier.toDTO()])
             } else {
                 throw Abort(.internalServerError)
             }
@@ -97,7 +102,11 @@ struct ShipmentController: RouteCollection {
                 customFields: customFields,
                 carrierSlug: updateRequest.carrier
             ) {
-                return updateResponse.toDTO()
+                guard let carrier = try await client.getCourier(withSlug: updateResponse.slug) else {
+                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(updateResponse.slug)")
+                }
+
+                return updateResponse.toDTO(usingCarriers: [updateResponse.slug: carrier.toDTO()])
             } else {
                 throw Abort(.internalServerError)
             }
@@ -150,7 +159,11 @@ struct ShipmentController: RouteCollection {
 
         do {
             if let trackingResponse = try await client.getTracking(shipmentId) {
-                let response = trackingResponse.toDTO()
+                guard let carrier = try await client.getCourier(withSlug: trackingResponse.slug) else {
+                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(trackingResponse.slug)")
+                }
+
+                let response = trackingResponse.toDTO(usingCarriers: [trackingResponse.slug: carrier.toDTO()])
 
                 // Do not cache responses that have no updates
                 if !trackingResponse.checkpoints.isEmpty {
