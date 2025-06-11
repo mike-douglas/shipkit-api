@@ -17,6 +17,7 @@ func routes(_ app: Application) throws {
         return String(decoding: buffer, as: UTF8.self)
     }
 
+    try app.register(collection: AppSettingsController())
     try app.register(collection: UserController())
     try app.register(collection: WebhookController())
 }

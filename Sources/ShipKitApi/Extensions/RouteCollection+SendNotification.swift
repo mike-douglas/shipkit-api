@@ -11,15 +11,15 @@ import Vapor
 import VaporAPNS
 
 extension RouteCollection {
-    func sendNotification(title _: String, subtitle _: String, with request: Request, to tokens: [String]) async throws {
+    func sendNotification(title: String, subtitle: String, with request: Request, to tokens: [String]) async throws {
         let alert = APNSAlertNotification(
             alert: .init(
-                title: .raw("Foo"),
-                subtitle: .raw("Bar")
+                title: .raw(title),
+                subtitle: .raw(subtitle)
             ),
             expiration: .immediately,
             priority: .immediately,
-            topic: ""
+            topic: AppNotifications.shared.topic
         )
 
         for token in tokens {

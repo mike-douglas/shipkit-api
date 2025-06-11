@@ -7,6 +7,7 @@
 
 import AfterShip
 import Fluent
+import ShipKitTypes
 import Vapor
 
 /// Represents a message received from AfterShip
@@ -26,21 +27,70 @@ private struct ASWebhookEvent: Codable, Content {
     }
 }
 
+private struct NotificationMessage: Codable, Content {
+    let shipmentId: ShipKitShipmentId
+    let userId: ShipKitUserId
+}
+
 struct AfterShipWebhookController: RouteCollection {
     private let hmacSecret: String
+    private let afterShipClient: AfterShipClient
 
     init() {
+        guard let apiKey = Environment.process.AFTERSHIP_API_KEY else {
+            fatalError("AFTERSHIP_API_KEY environment variable not set")
+        }
+
         guard let hmacSecret: String = Environment.process.AFTERSHIP_WEBHOOK_SECRET else {
             fatalError("AFTERSHIP_WEBHOOK_SECRET environment variable not set")
         }
 
         self.hmacSecret = hmacSecret
+        afterShipClient = .init(apiKey: apiKey)
     }
 
     func boot(routes: any RoutesBuilder) throws {
         let aftership = routes.grouped("aftership")
 
         aftership.post(use: incomingWebhook)
+        aftership.grouped(UserAuthenticator()).post("notify", use: sendNotificationTest)
+    }
+
+    @Sendable
+    func sendNotificationTest(req: Request) async throws -> HTTPStatus {
+        _ = try req.auth.require(APIAdmin.self)
+
+        let message = try req.content.decode(NotificationMessage.self)
+
+        guard let user = try await User.find(message.userId, on: req.db) else {
+            req.logger.error("Could not find user \(message.userId)")
+            throw Abort(.notFound)
+        }
+
+        guard let shipment = try await afterShipClient.getTracking(message.shipmentId) else {
+            req.logger.error("Could not find shipment \(message.shipmentId)")
+            throw Abort(.notFound)
+        }
+
+        guard let latestCheckpoint = shipment.checkpoints.sorted(by: { $0.createdAt > $1.createdAt }).first else {
+            req.logger.error("No checkpoints found")
+            throw Abort(.notFound)
+        }
+
+        let devices = try await user.$devices.query(on: req.db).all()
+
+        req.logger.info("Sending notifications to \(user.mailbox) for \(shipment.id) to \(devices.map { [$0.deviceId, $0.environment.rawValue].joined(separator: ":") })")
+
+        try await sendNotification(
+            title: shipment.title,
+            subtitle: latestCheckpoint.subtagMessage,
+            with: req,
+            to: devices.map { $0.deviceId }
+        )
+
+        AppMetrics.shared.notificationCounter().increment(by: 1)
+
+        return .ok
     }
 
     /// Handle incoming AfterShip API webhook.
@@ -75,12 +125,12 @@ struct AfterShipWebhookController: RouteCollection {
             req.logger.info("Update received for: \(shipment.id), \(shipment.trackingNumber)")
 
             guard let userId = shipment.customFields?["userId"] else {
-                req.logger.info("No userId found")
+                req.logger.error("No userId found")
                 throw Abort(.notFound)
             }
 
             guard let latestCheckpoint = shipment.checkpoints.sorted(by: { $0.createdAt > $1.createdAt }).first else {
-                req.logger.info("No checkpoints found")
+                req.logger.error("No checkpoints found")
                 throw Abort(.notFound)
             }
 
@@ -89,7 +139,7 @@ struct AfterShipWebhookController: RouteCollection {
             {
                 let devices = try await user.$devices.query(on: req.db).all()
 
-                req.logger.info("Sending notifications to \(user.mailbox) for \(shipment.id)")
+                req.logger.info("Sending notifications to \(user.mailbox) for \(shipment.id) to \(devices.map { [$0.deviceId, $0.environment.rawValue].joined(separator: ":") })")
 
                 try await sendNotification(
                     title: shipment.title,
@@ -97,6 +147,11 @@ struct AfterShipWebhookController: RouteCollection {
                     with: req,
                     to: devices.map { $0.deviceId }
                 )
+
+                AppMetrics.shared.notificationCounter().increment(by: 1)
+            } else {
+                req.logger.error("User \(userId) not found")
+                throw Abort(.notFound)
             }
         } catch {
             req.logger.error("Error: \(error)")

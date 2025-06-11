@@ -10,7 +10,7 @@ RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
     && apt-get install -y libjemalloc-dev openssh-client
 
 RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
-COPY id_ed25519 /root/.ssh/id_ed25519
+COPY ./.stage/id_ed25519 /root/.ssh/id_ed25519
 RUN chmod 600 /root/.ssh/id_ed25519
 
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
@@ -76,19 +76,20 @@ RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
     && rm -r /var/lib/apt/lists/*
 
 # Create a vapor user and group with /app as its home directory
-RUN useradd --user-group --create-home --system --skel /dev/null --home-dir /app vapor
+# RUN useradd --user-group --create-home --system --skel /dev/null --home-dir /app vapor
 
 # Switch to the new home directory
 WORKDIR /app
 
 # Copy built executable and any staged resources from builder
-COPY --from=build --chown=vapor:vapor /staging /app
+# COPY --from=build --chown=vapor:vapor /staging /app
+COPY --from=build /staging /app
 
 # Provide configuration needed by the built-in crash reporter and some sensible default behaviors.
 ENV SWIFT_BACKTRACE=enable=yes,sanitize=yes,threads=all,images=all,interactive=no,swift-backtrace=./swift-backtrace-static
 
 # Ensure all further commands run as the vapor user
-USER vapor:vapor
+# USER vapor:vapor
 
 # Let Docker bind to port 8080
 EXPOSE 8080

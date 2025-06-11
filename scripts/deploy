@@ -1,0 +1,7 @@
+#!/bin/sh
+
+ENV=${1}
+
+if [ "${ENV}" == "stage" ]; then
+  curl -XPOST "https://apps.strange-orbit.com/api/stacks/webhooks/df77c962-c0fa-4073-aa11-38603127791c"
+fi

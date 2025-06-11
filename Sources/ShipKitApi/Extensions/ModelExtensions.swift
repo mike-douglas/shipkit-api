@@ -6,6 +6,7 @@
 //
 
 import AfterShip
+import struct Foundation.URL
 import ShipKitTypes
 
 private extension String {
@@ -19,12 +20,12 @@ private extension String {
 }
 
 extension ASTracking {
-    func toDTO() -> ShipKitShipment {
+    func toDTO(usingCarriers carriers: [String: ShipKitCarrier]) -> ShipKitShipment {
         .init(
             id: id,
             title: title,
             trackingNumber: trackingNumber,
-            carrier: slug,
+            carrier: carriers[slug] ?? ShipKitCarrier(name: "Unknown", code: "unknown", summary: "Unknown Carrier"),
             updates: checkpoints.map { $0.toDTO() },
             deliveryDate: courierEstimatedDeliveryDate?.estimatedDeliveryDate,
             timestamp: updatedAt
@@ -53,6 +54,11 @@ extension ASCheckpoint {
 
 extension ASCourier {
     func toDTO() -> ShipKitCarrier {
-        .init(name: name, code: slug)
+        .init(
+            name: name,
+            code: slug,
+            summary: otherName ?? name,
+            url: webUrl != nil ? URL(string: webUrl!) : nil
+        )
     }
 }

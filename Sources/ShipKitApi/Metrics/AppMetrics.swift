@@ -14,19 +14,39 @@ enum PackageAddSource: String {
 }
 
 struct AppMetrics {
-    let metricsFactory: PrometheusMetricsFactory
+    var metricsFactory: PrometheusMetricsFactory
 
     static let shared: AppMetrics = .init()
 
     init() {
-        metricsFactory = PrometheusMetricsFactory(registry: PrometheusCollectorRegistry()
+        metricsFactory = PrometheusMetricsFactory(
+            registry: PrometheusCollectorRegistry()
         )
+
+        metricsFactory.valueHistogramBuckets["inbox_size"] = [
+            0, 1, 2, 3, 5, 8, 13, 15,
+        ]
     }
 
     func packagesCounter(source: PackageAddSource) -> any CounterHandler {
         metricsFactory.makeCounter(
             label: "packages",
             dimensions: [("source", source.rawValue)]
+        )
+    }
+
+    func notificationCounter() -> any CounterHandler {
+        metricsFactory.makeCounter(
+            label: "notifications",
+            dimensions: []
+        )
+    }
+
+    func inboxSizeRecorder() -> any RecorderHandler {
+        metricsFactory.makeRecorder(
+            label: "inbox_size",
+            dimensions: [],
+            aggregate: true
         )
     }
 }

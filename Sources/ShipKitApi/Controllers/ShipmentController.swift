@@ -26,15 +26,22 @@ struct ShipmentController: RouteCollection {
 
         shipments.post(use: startTracking)
         shipments.get("carrier", use: detectCarrierForTracking)
+
+        // Migration endpoints for v1 endpoint
+        shipments.get(use: findMigratedShipment)
+        shipments.post("migrations", use: addMigratedShipments)
+
         shipments.group(":shipmentId") { shipment in
             shipment.get(use: self.getLatestTrackingUpdates)
+            shipment.put(use: self.updateTracking)
+            shipment.delete(use: self.stopTracking)
         }
     }
 
     /// Create a new shipment and register it with the shipment tracker.
     ///
     /// - Parameter req: Request
-    /// - Returns: HTTP Status
+    /// - Returns: The Shipment
     @Sendable
     func startTracking(req: Request) async throws -> ShipKitShipment {
         _ = try req.auth.require(APIUser.self)
@@ -50,10 +57,16 @@ struct ShipmentController: RouteCollection {
             if let trackingResponse = try await client.createTracking(
                 trackingNumber: trackingRequest.trackingNumber,
                 title: trackingRequest.title,
-                customFields: customFields
+                customFields: customFields,
+                carrierSlug: trackingRequest.carrierSlug
             ) {
+                guard let carrier = try await client.getCourier(withSlug: trackingResponse.slug) else {
+                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(trackingResponse.slug)")
+                }
+
                 AppMetrics.shared.packagesCounter(source: .api).increment(by: 1)
-                return trackingResponse.toDTO()
+
+                return trackingResponse.toDTO(usingCarriers: [trackingResponse.slug: carrier.toDTO()])
             } else {
                 throw Abort(.internalServerError)
             }
@@ -63,15 +76,74 @@ struct ShipmentController: RouteCollection {
         }
     }
 
+    /// Update an existing shipment.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: The Shipment
     @Sendable
-    func updateTracking(req _: Request) async throws -> HTTPStatus {
-        return .notImplemented
+    func updateTracking(req: Request) async throws -> ShipKitShipment {
+        _ = try req.auth.require(APIUser.self)
+
+        guard let shipmentId = req.parameters.get("shipmentId") else {
+            throw Abort(.badRequest)
+        }
+
+        let updateRequest = try req.content.decode(ShipKitUpdateShipmentRequest.self)
+        var customFields: [String: String] = [:]
+
+        if let userId = updateRequest.userId {
+            customFields["userId"] = userId.uuidString
+        }
+
+        do {
+            if let updateResponse = try await client.updateTracking(
+                shipmentId,
+                title: updateRequest.title,
+                customFields: customFields,
+                carrierSlug: updateRequest.carrier
+            ) {
+                guard let carrier = try await client.getCourier(withSlug: updateResponse.slug) else {
+                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(updateResponse.slug)")
+                }
+
+                return updateResponse.toDTO(usingCarriers: [updateResponse.slug: carrier.toDTO()])
+            } else {
+                throw Abort(.internalServerError)
+            }
+        } catch {
+            req.logger.error("Error updating shipment: \(error)")
+            throw Abort(.internalServerError)
+        }
+    }
+
+    /// Stop tracking a shipment (and no longer receive webhook updates).
+    ///
+    /// - Parameter req: Request
+    /// - Returns: HTTP Status
+    @Sendable
+    func stopTracking(req: Request) async throws -> HTTPStatus {
+        _ = try req.auth.require(APIUser.self)
+
+        guard let shipmentId = req.parameters.get("shipmentId") else {
+            throw Abort(.badRequest)
+        }
+
+        do {
+            if try await client.deleteTracking(shipmentId) != nil {
+                return .ok
+            } else {
+                throw Abort(.internalServerError)
+            }
+        } catch {
+            req.logger.error("Error deleting shipment: \(error)")
+            throw Abort(.internalServerError)
+        }
     }
 
     /// Get the latest update for a shipment.
     ///
     /// - Parameter req: Request
-    /// - Returns: HTTP Status
+    /// - Returns: The Shipment
     @Sendable
     func getLatestTrackingUpdates(req: Request) async throws -> ShipKitShipment {
         _ = try req.auth.require(APIUser.self)
@@ -87,7 +159,11 @@ struct ShipmentController: RouteCollection {
 
         do {
             if let trackingResponse = try await client.getTracking(shipmentId) {
-                let response = trackingResponse.toDTO()
+                guard let carrier = try await client.getCourier(withSlug: trackingResponse.slug) else {
+                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(trackingResponse.slug)")
+                }
+
+                let response = trackingResponse.toDTO(usingCarriers: [trackingResponse.slug: carrier.toDTO()])
 
                 // Do not cache responses that have no updates
                 if !trackingResponse.checkpoints.isEmpty {
@@ -108,6 +184,10 @@ struct ShipmentController: RouteCollection {
         }
     }
 
+    /// Detect the carrier for a shipment by tracking number.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: An Array of possible Carriers
     @Sendable
     func detectCarrierForTracking(req: Request) async throws -> [ShipKitCarrier] {
         _ = try req.auth.require(APIUser.self)
@@ -146,5 +226,44 @@ struct ShipmentController: RouteCollection {
             req.logger.error("Error getting shipment: \(error)")
             throw Abort(.internalServerError)
         }
+    }
+
+    /// Insert trackingNumber + shipmentID used in migration from v1 -> v2.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: HTTP Status
+    @Sendable
+    func addMigratedShipments(req: Request) async throws -> HTTPStatus {
+        _ = try req.auth.require(APIAdmin.self)
+
+        let shipmentsToMigrate = try req.content.decode([MigratedShipment].self)
+
+        for migratedShipment in shipmentsToMigrate {
+            try await migratedShipment.save(on: req.db)
+        }
+
+        return .created
+    }
+
+    /// Find a migrated shipment from v1 by tracking number and return the ShipmentId to be used in this API.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: The shipment ID if it exists
+    @Sendable
+    func findMigratedShipment(req: Request) async throws -> ShipKitShipmentIdLookup {
+        _ = try req.auth.require(APIUser.self)
+
+        guard let _ = req.parameters.get("userId") else {
+            throw Abort(.badRequest)
+        }
+
+        let findByTrackingRequest = try req.query.decode(ShipKitFindByTrackingRequest.self)
+        let trackingNumber = findByTrackingRequest.trackingNumber
+
+        guard let migratedShipment = try await MigratedShipment.query(on: req.db).filter(\.$trackingNumber == trackingNumber).first() else {
+            throw Abort(.notFound)
+        }
+
+        return ShipKitShipmentIdLookup(shipmentId: migratedShipment.shipmentId)
     }
 }

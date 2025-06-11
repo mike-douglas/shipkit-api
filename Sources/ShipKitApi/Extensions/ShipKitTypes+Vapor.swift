@@ -53,3 +53,21 @@ extension ShipKitUserInboxItem: @retroactive AsyncRequestDecodable {}
 extension ShipKitUserInboxItem: @retroactive ResponseEncodable {}
 extension ShipKitUserInboxItem: @retroactive RequestDecodable {}
 extension ShipKitUserInboxItem: @retroactive Content, @unchecked @retroactive Sendable {}
+
+extension ShipKitUserDevice: @retroactive Content, @unchecked @retroactive Sendable {
+    func toModel() -> UserDevice {
+        let model = UserDevice()
+
+        model.deviceId = deviceId
+        model.notificationPreference = UserDeviceNotificationPreference(rawValue: notificationPreference.rawValue)!
+        model.environment = UserDeviceNotificationEnvironment(rawValue: environment.rawValue)!
+
+        return model
+    }
+}
+
+extension ShipKitShipmentIdLookup: @retroactive AsyncResponseEncodable {}
+extension ShipKitShipmentIdLookup: @retroactive AsyncRequestDecodable {}
+extension ShipKitShipmentIdLookup: @retroactive ResponseEncodable {}
+extension ShipKitShipmentIdLookup: @retroactive RequestDecodable {}
+extension ShipKitShipmentIdLookup: @retroactive Content, @unchecked @retroactive Sendable {}

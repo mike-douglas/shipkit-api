@@ -1,5 +1,5 @@
 {
-  "originHash" : "b5a65940095a087ecda9961ce86b9783f37f89047f4d1fd8535e8918830d19f2",
+  "originHash" : "1e4ac6da450248a18aecfee9503df12770008d440aaff2c6ce5f46cf01fc825d",
   "pins" : [
     {
       "identity" : "apns",
@@ -97,7 +97,7 @@
       "location" : "ssh://git@github.com/mike-douglas/shipkit-types.git",
       "state" : {
         "branch" : "main",
-        "revision" : "56677f278757aefb3ad08f363b5f36e7f065d230"
+        "revision" : "e4c6d270006a2bfbd4186d9c16b7f1accd1d4c5a"
       }
     },
     {
@@ -133,7 +133,7 @@
       "location" : "ssh://git@github.com/mike-douglas/swift-aftership.git",
       "state" : {
         "branch" : "main",
-        "revision" : "cc69d8489905f1c8e1fcbe4c2c38ed05d55d97ec"
+        "revision" : "6283a0bf062e47665694852155b6faa25976a7d4"
       }
     },
     {
