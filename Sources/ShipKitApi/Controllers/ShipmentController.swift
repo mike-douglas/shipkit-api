@@ -250,7 +250,7 @@ struct ShipmentController: RouteCollection {
     /// - Parameter req: Request
     /// - Returns: The shipment ID if it exists
     @Sendable
-    func findMigratedShipment(req: Request) async throws -> ShipKitShipmentId {
+    func findMigratedShipment(req: Request) async throws -> ShipKitShipmentIdLookup {
         _ = try req.auth.require(APIUser.self)
 
         guard let _ = req.parameters.get("userId") else {
@@ -264,6 +264,6 @@ struct ShipmentController: RouteCollection {
             throw Abort(.notFound)
         }
 
-        return migratedShipment.shipmentId
+        return ShipKitShipmentIdLookup(shipmentId: migratedShipment.shipmentId)
     }
 }

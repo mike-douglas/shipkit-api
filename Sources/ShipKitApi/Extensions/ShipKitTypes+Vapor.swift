@@ -65,3 +65,9 @@ extension ShipKitUserDevice: @retroactive Content, @unchecked @retroactive Senda
         return model
     }
 }
+
+extension ShipKitShipmentIdLookup: @retroactive AsyncResponseEncodable {}
+extension ShipKitShipmentIdLookup: @retroactive AsyncRequestDecodable {}
+extension ShipKitShipmentIdLookup: @retroactive ResponseEncodable {}
+extension ShipKitShipmentIdLookup: @retroactive RequestDecodable {}
+extension ShipKitShipmentIdLookup: @retroactive Content, @unchecked @retroactive Sendable {}
