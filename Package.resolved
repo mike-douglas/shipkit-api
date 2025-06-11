@@ -133,7 +133,7 @@
       "location" : "ssh://git@github.com/mike-douglas/swift-aftership.git",
       "state" : {
         "branch" : "main",
-        "revision" : "74321b464a64c07d2ed60897719eed6ee5512050"
+        "revision" : "6283a0bf062e47665694852155b6faa25976a7d4"
       }
     },
     {
