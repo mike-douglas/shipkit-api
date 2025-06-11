@@ -58,7 +58,7 @@ struct ShipmentController: RouteCollection {
                 trackingNumber: trackingRequest.trackingNumber,
                 title: trackingRequest.title,
                 customFields: customFields,
-                carrierSlug: nil
+                carrierSlug: trackingRequest.carrierSlug
             ) {
                 AppMetrics.shared.packagesCounter(source: .api).increment(by: 1)
                 return trackingResponse.toDTO()
