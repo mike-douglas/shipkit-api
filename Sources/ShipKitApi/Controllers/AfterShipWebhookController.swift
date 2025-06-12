@@ -129,7 +129,7 @@ struct AfterShipWebhookController: RouteCollection {
                 throw Abort(.notFound)
             }
 
-            guard let latestCheckpoint = shipment.checkpoints.sorted(by: { $0.createdAt > $1.createdAt }).first else {
+            guard let latestCheckpoint = shipment.checkpoints.sorted(by: { $0.createdAt < $1.createdAt }).first else {
                 req.logger.error("No checkpoints found")
                 throw Abort(.notFound)
             }
