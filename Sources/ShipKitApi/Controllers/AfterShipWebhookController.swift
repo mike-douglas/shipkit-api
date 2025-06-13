@@ -129,7 +129,7 @@ struct AfterShipWebhookController: RouteCollection {
                 throw Abort(.notFound)
             }
 
-            guard let latestCheckpoint = shipment.checkpoints.sorted(by: { $0.createdAt < $1.createdAt }).first else {
+            guard let latestCheckpoint = shipment.checkpoints.sorted(by: { $0.createdAt > $1.createdAt }).first else {
                 req.logger.error("No checkpoints found")
                 throw Abort(.notFound)
             }
@@ -140,6 +140,7 @@ struct AfterShipWebhookController: RouteCollection {
                 let devices = try await user.$devices.query(on: req.db).all()
 
                 req.logger.info("Sending notifications to \(user.mailbox) for \(shipment.id) to \(devices.map { [$0.deviceId, $0.environment.rawValue].joined(separator: ":") })")
+                req.logger.info("Checkpoint: \(latestCheckpoint.subtag), \(latestCheckpoint.subtagMessage)")
 
                 try await sendNotification(
                     title: shipment.title,
