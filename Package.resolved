@@ -97,7 +97,7 @@
       "location" : "ssh://git@github.com/mike-douglas/shipkit-types.git",
       "state" : {
         "branch" : "main",
-        "revision" : "e4c6d270006a2bfbd4186d9c16b7f1accd1d4c5a"
+        "revision" : "a761706fcead1628821f864590acadf6dd5e3a63"
       }
     },
     {
@@ -133,7 +133,7 @@
       "location" : "ssh://git@github.com/mike-douglas/swift-aftership.git",
       "state" : {
         "branch" : "main",
-        "revision" : "6283a0bf062e47665694852155b6faa25976a7d4"
+        "revision" : "8671642c2bcc7111242785bc5d99a992f36171fd"
       }
     },
     {
