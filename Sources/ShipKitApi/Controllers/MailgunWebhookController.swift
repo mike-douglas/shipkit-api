@@ -101,7 +101,8 @@ struct MailgunWebhookController: RouteCollection {
                 .filter(\.$mailbox == recipient)
                 .first()
             else {
-                throw Abort(.notFound, reason: "User not found")
+                req.logger.error("No user found for \(recipient)")
+                return .accepted
             }
 
             if let trackingInfo = try await emailParser.detectTrackingFromEmail(body),
@@ -110,15 +111,29 @@ struct MailgunWebhookController: RouteCollection {
             {
                 req.logger.info("Detected tracking number: \(trackingNumber)")
 
-                guard let shipment = try await afterShipClient.createTracking(
-                    trackingNumber: trackingNumber,
-                    title: title,
-                    customFields: ["userId": user.id!.uuidString]
-                ) else {
+                let shipment: ASTracking?
+
+                do {
+                    shipment = try await afterShipClient.createTracking(
+                        trackingNumber: trackingNumber,
+                        title: title,
+                        customFields: ["userId": user.id!.uuidString]
+                    )
+                } catch let AfterShipClientError.trackingAlreadyExists(existingId) {
+                    shipment = try await afterShipClient.getTracking(existingId)
+
+                    if let shipment, let userId = shipment.customFields?["userId"] {
+                        if userId != user.id!.uuidString {
+                            throw Abort(.internalServerError, reason: "Existing shipment belongs to another user")
+                        }
+                    }
+                } catch {
                     throw Abort(.internalServerError, reason: "Create tracking error")
                 }
 
-                let shipmentId = shipment.id
+                guard let shipmentId = shipment?.id else {
+                    throw Abort(.internalServerError, reason: "Could not create or retrieve shipment")
+                }
 
                 // Create a new shipment record
                 let newShipment = ReceivedShipment()
@@ -140,6 +155,6 @@ struct MailgunWebhookController: RouteCollection {
             throw Abort(.internalServerError)
         }
 
-        return .ok
+        return .accepted
     }
 }

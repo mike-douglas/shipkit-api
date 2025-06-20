@@ -10,12 +10,18 @@ import Vapor
 
 struct AppSettingsController: RouteCollection {
     let emailDomain: String
+    let offeringIdentifier: String
 
     init() {
         guard let emailDomain = Environment.process.SHIPKIT_EMAIL_DOMAIN else {
             fatalError("SHIPKIT_EMAIL_DOMAIN environment variable is not set")
         }
 
+        guard let offeringIdentifier = Environment.process.SHIPKIT_ACTIVE_OFFERING_IDENTIFIER else {
+            fatalError("SHIPKIT_ACTIVE_OFFERING_IDENTIFIER environment variable is not set")
+        }
+
+        self.offeringIdentifier = offeringIdentifier
         self.emailDomain = emailDomain
     }
 
@@ -34,7 +40,8 @@ struct AppSettingsController: RouteCollection {
         _ = try req.auth.require(APIUser.self)
 
         return .init(
-            emailDomain: emailDomain
+            emailDomain: emailDomain,
+            offeringIdentifier: offeringIdentifier
         )
     }
 }

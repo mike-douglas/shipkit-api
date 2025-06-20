@@ -126,7 +126,7 @@ struct AfterShipWebhookController: RouteCollection {
 
             guard let userId = shipment.customFields?["userId"] else {
                 req.logger.error("No userId found")
-                throw Abort(.notFound)
+                return .accepted
             }
 
             guard let latestCheckpoint = shipment.checkpoints.sorted(by: { $0.createdAt > $1.createdAt }).first else {
@@ -142,9 +142,11 @@ struct AfterShipWebhookController: RouteCollection {
                 req.logger.info("Sending notifications to \(user.mailbox) for \(shipment.id) to \(devices.map { [$0.deviceId, $0.environment.rawValue].joined(separator: ":") })")
                 req.logger.info("Checkpoint: \(latestCheckpoint.subtag), \(latestCheckpoint.subtagMessage)")
 
+                let updateDTO = latestCheckpoint.toDTO()
+
                 try await sendNotification(
                     title: shipment.title,
-                    subtitle: latestCheckpoint.subtagMessage,
+                    subtitle: updateDTO.substatus.localizedString,
                     with: req,
                     to: devices.map { $0.deviceId }
                 )
@@ -152,7 +154,7 @@ struct AfterShipWebhookController: RouteCollection {
                 AppMetrics.shared.notificationCounter().increment(by: 1)
             } else {
                 req.logger.error("User \(userId) not found")
-                throw Abort(.notFound)
+                return .accepted
             }
         } catch {
             req.logger.error("Error: \(error)")
