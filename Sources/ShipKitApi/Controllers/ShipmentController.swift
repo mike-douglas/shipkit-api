@@ -12,11 +12,14 @@ import Vapor
 
 struct ShipmentController: RouteCollection {
     private let client: AfterShipClient
+    private let isTesting: Bool
 
     init() {
         guard let apiKey = Environment.process.AFTERSHIP_API_KEY else {
             fatalError("AFTERSHIP_API_KEY environment variable not set")
         }
+
+        isTesting = Environment.process.SHIPKIT_TEST_MODE == nil ? false : true
 
         client = AfterShipClient(apiKey: apiKey)
     }
@@ -32,7 +35,12 @@ struct ShipmentController: RouteCollection {
         shipments.post("migrations", use: addMigratedShipments)
 
         shipments.group(":shipmentId") { shipment in
-            shipment.get(use: self.getLatestTrackingUpdates)
+            if isTesting {
+                shipment.get(use: self.geTestTrackingUpdates)
+            } else {
+                shipment.get(use: self.getLatestTrackingUpdates)
+            }
+
             shipment.put(use: self.updateTracking)
             shipment.delete(use: self.stopTracking)
         }
@@ -182,6 +190,25 @@ struct ShipmentController: RouteCollection {
             req.logger.error("Error getting shipment: \(error)")
             throw Abort(.internalServerError)
         }
+    }
+
+    /// Get the latest update for a shipment.
+    ///
+    /// - Parameter req: Request
+    /// - Returns: The Shipment
+    @Sendable
+    func geTestTrackingUpdates(req: Request) async throws -> ShipKitShipment {
+        _ = try req.auth.require(APIUser.self)
+
+        guard let shipmentId = req.parameters.get("shipmentId") else {
+            throw Abort(.badRequest)
+        }
+
+        guard let shipmentRecord = testShipments.first(where: { $0.id == shipmentId }) else {
+            throw Abort(.notFound)
+        }
+
+        return shipmentRecord
     }
 
     /// Detect the carrier for a shipment by tracking number.

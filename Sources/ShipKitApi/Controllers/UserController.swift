@@ -10,6 +10,12 @@ import ShipKitTypes
 import Vapor
 
 struct UserController: RouteCollection {
+    private let isTesting: Bool
+
+    init() {
+        isTesting = Environment.process.SHIPKIT_TEST_MODE == nil ? false : true
+    }
+
     func boot(routes: any RoutesBuilder) throws {
         let users = routes.grouped(UserAuthenticator()).grouped("user")
 
@@ -19,7 +25,12 @@ struct UserController: RouteCollection {
         try users.group(":userId") { user in
             user.put(use: updateSettings)
 
-            user.get("shipments", use: getUserInbox)
+            if isTesting {
+                user.get("shipments", use: getUserTestInbox)
+            } else {
+                user.get("shipments", use: getUserInbox)
+            }
+
             user.post("shipments", use: addToUserInbox)
 
             try user.register(collection: ShipmentController())
@@ -108,6 +119,23 @@ struct UserController: RouteCollection {
         for shipment in try await user.$shipments.query(on: req.db).all() {
             try shipmentDTOs.append(await shipment.toDTO(on: req.db))
             try await shipment.delete(on: req.db)
+        }
+
+        AppMetrics.shared.inboxSizeRecorder().record(Int64(shipmentDTOs.count))
+
+        return shipmentDTOs
+    }
+
+    /// Get test user data
+    ///
+    /// - Parameter req: Request
+    /// - Returns: Array of inbox items for the user
+    @Sendable
+    func getUserTestInbox(req: Request) async throws -> [ShipKitUserInboxItem] {
+        _ = try req.auth.require(APIUser.self)
+
+        let shipmentDTOs: [ShipKitUserInboxItem] = testShipments.map {
+            .init(id: $0.id, trackingNumber: $0.trackingNumber, receivedAt: $0.timestamp!)
         }
 
         AppMetrics.shared.inboxSizeRecorder().record(Int64(shipmentDTOs.count))
