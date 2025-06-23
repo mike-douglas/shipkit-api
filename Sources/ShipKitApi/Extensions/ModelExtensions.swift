@@ -26,6 +26,7 @@ extension ASTracking {
             title: title,
             trackingNumber: trackingNumber,
             carrier: carriers[slug] ?? ShipKitCarrier(name: "Unknown", code: "unknown", summary: "Unknown Carrier"),
+            trackingUrl: URL(string: courierTrackingLink ?? ""),
             updates: checkpoints.map { $0.toDTO() },
             deliveryDate: courierEstimatedDeliveryDate?.estimatedDeliveryDate,
             timestamp: updatedAt
