@@ -7,6 +7,7 @@
 
 import AfterShip
 import Fluent
+import ShipKitTypes
 import SwiftEmailValidator
 import Vapor
 
@@ -111,7 +112,7 @@ struct MailgunWebhookController: RouteCollection {
             {
                 req.logger.info("Detected tracking number: \(trackingNumber)")
 
-                let shipment: ASTracking?
+                let shipment: ShipKitShipment?
 
                 do {
                     shipment = try await afterShipClient.createTracking(
@@ -122,8 +123,8 @@ struct MailgunWebhookController: RouteCollection {
                 } catch let AfterShipClientError.trackingAlreadyExists(existingId) {
                     shipment = try await afterShipClient.getTracking(existingId)
 
-                    if let shipment, let userId = shipment.customFields?["userId"] {
-                        if userId != user.id!.uuidString {
+                    if let shipment, let userId = shipment.userId {
+                        if userId.uuidString != user.id!.uuidString {
                             throw Abort(.internalServerError, reason: "Existing shipment belongs to another user")
                         }
                     }

@@ -18,7 +18,7 @@ let package = Package(
         // ShipKit Data Types
         .package(url: "ssh://git@github.com/mike-douglas/shipkit-types.git", branch: "main"),
         // AfterShip API Client
-        .package(url: "ssh://git@github.com/mike-douglas/swift-aftership.git", branch: "main"),
+        .package(url: "ssh://git@github.com/mike-douglas/swift-aftership.git", branch: "orb-297-move-to-17track"),
         // Orinoco task runner
         .package(url: "ssh://git@github.com/mike-douglas/swift-orinoco.git", branch: "main"),
         // Metrics

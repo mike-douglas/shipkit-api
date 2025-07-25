@@ -68,13 +68,13 @@ struct ShipmentController: RouteCollection {
                 customFields: customFields,
                 carrierSlug: trackingRequest.carrierSlug
             ) {
-                guard let carrier = try await client.getCourier(withSlug: trackingResponse.slug) else {
-                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(trackingResponse.slug)")
+                guard let carrier = try await client.getCourier(withSlug: trackingResponse.carrier.code) else {
+                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(trackingResponse.carrier.code)")
                 }
 
                 AppMetrics.shared.packagesCounter(source: .api).increment(by: 1)
 
-                return trackingResponse.toDTO(usingCarriers: [trackingResponse.slug: carrier.toDTO()])
+                return trackingResponse
             } else {
                 throw Abort(.internalServerError)
             }
@@ -110,11 +110,11 @@ struct ShipmentController: RouteCollection {
                 customFields: customFields,
                 carrierSlug: updateRequest.carrier
             ) {
-                guard let carrier = try await client.getCourier(withSlug: updateResponse.slug) else {
-                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(updateResponse.slug)")
+                guard let carrier = try await client.getCourier(withSlug: updateResponse.carrier.code) else {
+                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(updateResponse.carrier.code)")
                 }
 
-                return updateResponse.toDTO(usingCarriers: [updateResponse.slug: carrier.toDTO()])
+                return updateResponse
             } else {
                 throw Abort(.internalServerError)
             }
@@ -167,14 +167,14 @@ struct ShipmentController: RouteCollection {
 
         do {
             if let trackingResponse = try await client.getTracking(shipmentId) {
-                guard let carrier = try await client.getCourier(withSlug: trackingResponse.slug) else {
-                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(trackingResponse.slug)")
+                guard let carrier = try await client.getCourier(withSlug: trackingResponse.carrier.code) else {
+                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(trackingResponse.carrier.code)")
                 }
 
-                let response = trackingResponse.toDTO(usingCarriers: [trackingResponse.slug: carrier.toDTO()])
+                let response = trackingResponse
 
                 // Do not cache responses that have no updates
-                if !trackingResponse.checkpoints.isEmpty {
+                if !trackingResponse.updates.isEmpty {
                     try await req.application.cache.set(
                         "getLatestTrackingUpdates.\(shipmentId)",
                         to: response,
@@ -237,7 +237,7 @@ struct ShipmentController: RouteCollection {
 
         do {
             if let carrierDetectResponse = try await client.detectCarrier(withTrackingNumber: trackingNumber) {
-                let response = carrierDetectResponse.map { $0.toDTO() }
+                let response = carrierDetectResponse
 
                 try await req.application.cache.set(
                     "detectCarrierForTracking.\(trackingNumber)",
