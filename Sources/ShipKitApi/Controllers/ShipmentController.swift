@@ -5,23 +5,23 @@
 //  Created by Mike Douglas on 5/22/25.
 //
 
-import AfterShip
 import Fluent
+import SeventeenTrack
 import ShipKitTypes
 import Vapor
 
 struct ShipmentController: RouteCollection {
-    private let client: AfterShipClient
+    private let client: SeventeenTrackClient
     private let isTesting: Bool
 
     init() {
-        guard let apiKey = Environment.process.AFTERSHIP_API_KEY else {
-            fatalError("AFTERSHIP_API_KEY environment variable not set")
+        guard let apiKey = Environment.process.SEVENTEENTRACK_API_KEY else {
+            fatalError("SEVENTEENTRACK_API_KEY environment variable not set")
         }
 
         isTesting = Environment.process.SHIPKIT_TEST_MODE == nil ? false : true
 
-        client = AfterShipClient(apiKey: apiKey)
+        client = SeventeenTrackClient(apiKey: apiKey)
     }
 
     func boot(routes: any RoutesBuilder) throws {
@@ -68,10 +68,6 @@ struct ShipmentController: RouteCollection {
                 customFields: customFields,
                 carrierSlug: trackingRequest.carrierSlug
             ) {
-                guard let carrier = try await client.getCourier(withSlug: trackingResponse.carrier.code) else {
-                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(trackingResponse.carrier.code)")
-                }
-
                 AppMetrics.shared.packagesCounter(source: .api).increment(by: 1)
 
                 return trackingResponse
@@ -110,10 +106,6 @@ struct ShipmentController: RouteCollection {
                 customFields: customFields,
                 carrierSlug: updateRequest.carrier
             ) {
-                guard let carrier = try await client.getCourier(withSlug: updateResponse.carrier.code) else {
-                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(updateResponse.carrier.code)")
-                }
-
                 return updateResponse
             } else {
                 throw Abort(.internalServerError)
@@ -167,10 +159,6 @@ struct ShipmentController: RouteCollection {
 
         do {
             if let trackingResponse = try await client.getTracking(shipmentId) {
-                guard let carrier = try await client.getCourier(withSlug: trackingResponse.carrier.code) else {
-                    throw Abort(.internalServerError, reason: "Could not find carrier for slug \(trackingResponse.carrier.code)")
-                }
-
                 let response = trackingResponse
 
                 // Do not cache responses that have no updates
