@@ -210,12 +210,7 @@ struct ShipmentController: RouteCollection {
         let carrierDetectRequest = try req.query.decode(ShipKitCarrierDetectionRequest.self)
 
         guard let trackingNumber = carrierDetectRequest.trackingNumber else {
-            throw Abort(
-                .custom(
-                    code: HTTPStatus.badRequest.code,
-                    reasonPhrase: "trackingNumber is required"
-                )
-            )
+            return SeventeenTrackCarrier.allCarriers.values.map { $0 }
         }
 
         // Check cache
