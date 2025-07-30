@@ -1,5 +1,5 @@
 {
-  "originHash" : "431ee3f97a18e0fe72592a90413281f8685e21ddd9357e836850ca897e25a152",
+  "originHash" : "775918bf90bb9122c8791f5eac327d3f96f7f2cbfb1a26df7c71603999df3134",
   "pins" : [
     {
       "identity" : "apns",
@@ -125,6 +125,15 @@
       "state" : {
         "revision" : "fe1257499440de396504eea2b7793ce1f984c324",
         "version" : "1.11.3"
+      }
+    },
+    {
+      "identity" : "swift-17track",
+      "kind" : "remoteSourceControl",
+      "location" : "ssh://git@github.com/mike-douglas/swift-17track.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "47d8f0b223ffd6a5410e82a9e3e78b6f0be9d9ab"
       }
     },
     {

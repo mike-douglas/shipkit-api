@@ -19,6 +19,8 @@ let package = Package(
         .package(url: "ssh://git@github.com/mike-douglas/shipkit-types.git", branch: "main"),
         // AfterShip API Client
         .package(url: "ssh://git@github.com/mike-douglas/swift-aftership.git", branch: "orb-297-move-to-17track"),
+        // 17Track API Client
+        .package(url: "ssh://git@github.com/mike-douglas/swift-17track.git", branch: "main"),
         // Orinoco task runner
         .package(url: "ssh://git@github.com/mike-douglas/swift-orinoco.git", branch: "main"),
         // Metrics
@@ -44,6 +46,7 @@ let package = Package(
                 .product(name: "VaporAPNS", package: "apns"),
                 .product(name: "ShipKitTypes", package: "shipkit-types"),
                 .product(name: "AfterShip", package: "swift-aftership"),
+                .product(name: "SeventeenTrack", package: "swift-17track"),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "Orinoco", package: "swift-orinoco"),
             ],
