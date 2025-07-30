@@ -74,6 +74,12 @@ struct ShipmentController: RouteCollection {
             } else {
                 throw Abort(.internalServerError)
             }
+        } catch let SeventeenTrackError.rejectedError(rejectError) {
+            if rejectError == .carrierNotDetected {
+                throw Abort(.notFound, reason: "Unable to detect carrier from tracking number")
+            } else {
+                throw Abort(.internalServerError)
+            }
         } catch {
             req.logger.error("Error creating shipment: \(error)")
             throw Abort(.internalServerError)
