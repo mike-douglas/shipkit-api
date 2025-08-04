@@ -1,56 +1,33 @@
 //
-//  AfterShipWebhookController.swift
+//  SeventeenTrackWebhookController.swift
 //  ShipKitApi
 //
-//  Created by Mike Douglas on 5/24/25.
+//  Created by Mike Douglas on 7/30/25.
 //
 
-import AfterShip
 import Fluent
+import SeventeenTrack
 import ShipKitTypes
 import Vapor
-
-/// Represents a message received from AfterShip
-private struct ASWebhookEvent: Codable, Content {
-    let event: String
-    let eventId: UUID
-    let isTrackingFirstTag: Bool
-    let msg: ASTracking
-    let ts: Int64
-
-    enum CodingKeys: String, CodingKey {
-        case event
-        case eventId = "event_id"
-        case isTrackingFirstTag = "is_tracking_first_tag"
-        case msg
-        case ts
-    }
-}
 
 private struct NotificationMessage: Codable, Content {
     let shipmentId: ShipKitShipmentId
     let userId: ShipKitUserId
 }
 
-struct AfterShipWebhookController: RouteCollection {
-    private let hmacSecret: String
-    private let afterShipClient: AfterShipClient
+struct SeventeenTrackWebhookController: RouteCollection {
+    private let seventeenTrackClient: SeventeenTrackClient
 
     init() {
-        guard let apiKey = Environment.process.AFTERSHIP_API_KEY else {
-            fatalError("AFTERSHIP_API_KEY environment variable not set")
+        guard let apiKey = Environment.process.SEVENTEENTRACK_API_KEY else {
+            fatalError("SEVENTEENTRACK_API_KEY environment variable not set")
         }
 
-        guard let hmacSecret: String = Environment.process.AFTERSHIP_WEBHOOK_SECRET else {
-            fatalError("AFTERSHIP_WEBHOOK_SECRET environment variable not set")
-        }
-
-        self.hmacSecret = hmacSecret
-        afterShipClient = .init(apiKey: apiKey)
+        seventeenTrackClient = .init(apiKey: apiKey)
     }
 
     func boot(routes: any RoutesBuilder) throws {
-        let aftership = routes.grouped("aftership")
+        let aftership = routes.grouped("17track")
 
         aftership.post(use: incomingWebhook)
         aftership.grouped(UserAuthenticator()).post("notify", use: sendNotificationTest)
@@ -67,7 +44,7 @@ struct AfterShipWebhookController: RouteCollection {
             throw Abort(.notFound)
         }
 
-        guard let shipment = try await afterShipClient.getTracking(message.shipmentId) else {
+        guard let shipment = try await seventeenTrackClient.getTracking(message.shipmentId) else {
             req.logger.error("Could not find shipment \(message.shipmentId)")
             throw Abort(.notFound)
         }
@@ -101,48 +78,33 @@ struct AfterShipWebhookController: RouteCollection {
     /// - Returns: HTTP Status or error
     @Sendable
     func incomingWebhook(req: Request) async throws -> HTTPStatus {
-        guard let hmacAuth = req.headers.first(name: "Aftership-Hmac-Sha256") else {
-            return .unauthorized
-        }
-
-        guard let requestBody = req.body.string else {
+        guard req.body.string != nil else {
             return .badRequest
         }
 
-        let signature = hmacSha256(
-            data: requestBody,
-            secret: hmacSecret
-        )
-
-        guard let signature, hmacAuth == signature else {
-            return .unauthorized
-        }
-
         do {
-            let message = try req.content.decode(ASWebhookEvent.self)
-            let shipment = message.msg
+            let message = try req.content.decode(SeventeenTrackWebhookResponse.self)
+            let shipment = message.data.shipKitShipment
 
             req.logger.info("Update received for: \(shipment.id), \(shipment.trackingNumber)")
 
-            guard let userId = shipment.customFields?["userId"] else {
+            guard let userId = shipment.userId else {
                 req.logger.error("No userId found")
                 return .accepted
             }
 
-            guard let latestCheckpoint = shipment.checkpoints.sorted(by: { $0.createdAt > $1.createdAt }).first else {
-                req.logger.error("No checkpoints found")
+            guard let latestCheckpoint = shipment.updates.sorted(by: { $0.timestamp > $1.timestamp }).first else {
+                req.logger.error("No updates found")
                 throw Abort(.notFound)
             }
 
-            if let userUUID = UUID(uuidString: userId),
-               let user = try await User.find(userUUID, on: req.db)
-            {
+            if let user = try await User.find(userId, on: req.db) {
                 let devices = try await user.$devices.query(on: req.db).all()
 
                 req.logger.info("Sending notifications to \(user.mailbox) for \(shipment.id) to \(devices.map { [$0.deviceId, $0.environment.rawValue].joined(separator: ":") })")
-                req.logger.info("Checkpoint: \(latestCheckpoint.subtag), \(latestCheckpoint.subtagMessage)")
+                req.logger.info("Checkpoint: \(latestCheckpoint.status.localizedString), \(latestCheckpoint.substatus.localizedString)")
 
-                let updateDTO = latestCheckpoint.toDTO()
+                let updateDTO = latestCheckpoint
 
                 try await sendNotification(
                     title: shipment.title,
