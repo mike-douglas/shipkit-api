@@ -3,8 +3,8 @@
 ENV=${1}
 
 if [ "${ENV}" == "prod" ]; then
-  curl -XPOST "https://deploy.strange-orbit.com/api/stacks/webhooks/212f2146-01d5-4354-9b4e-4dccf349cf52"
+  curl -XPOST "https://deploy.strange-orbit.com/api/stacks/webhooks/d2347624-d4ca-4a1d-820f-ac6010895522"
 fi
 if [ "${ENV}" == "stage" ]; then
-  curl -XPOST "https://deploy.strange-orbit.com/api/stacks/webhooks/df77c962-c0fa-4073-aa11-38603127791c"
+  curl -XPOST "https://deploy.strange-orbit.com/api/stacks/webhooks/126f7487-1eec-4eac-8b08-ff9cc64a2ea5"
 fi

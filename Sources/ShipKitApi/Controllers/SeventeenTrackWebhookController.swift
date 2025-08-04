@@ -78,7 +78,7 @@ struct SeventeenTrackWebhookController: RouteCollection {
     /// - Returns: HTTP Status or error
     @Sendable
     func incomingWebhook(req: Request) async throws -> HTTPStatus {
-        guard let requestBody = req.body.string else {
+        guard req.body.string != nil else {
             return .badRequest
         }
 

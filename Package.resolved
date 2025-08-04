@@ -133,7 +133,7 @@
       "location" : "ssh://git@github.com/mike-douglas/swift-17track.git",
       "state" : {
         "branch" : "main",
-        "revision" : "7d8b7e9cb9c6634b6d7481b5dcd82e12e93ff682"
+        "revision" : "fc2f8279009d32b9c84ca55885ec7095e57d55b2"
       }
     },
     {
