@@ -95,7 +95,7 @@ struct SeventeenTrackWebhookController: RouteCollection {
 
             guard let latestCheckpoint = shipment.updates.sorted(by: { $0.timestamp > $1.timestamp }).first else {
                 req.logger.error("No updates found")
-                throw Abort(.notFound)
+                return .accepted
             }
 
             if let user = try await User.find(userId, on: req.db) {
