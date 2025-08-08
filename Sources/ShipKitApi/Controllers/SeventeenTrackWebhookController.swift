@@ -90,12 +90,12 @@ struct SeventeenTrackWebhookController: RouteCollection {
 
             guard let userId = shipment.userId else {
                 req.logger.error("No userId found")
-                return .accepted
+                return .ok
             }
 
             guard let latestCheckpoint = shipment.updates.sorted(by: { $0.timestamp > $1.timestamp }).first else {
                 req.logger.error("No updates found")
-                return .accepted
+                return .ok
             }
 
             if let user = try await User.find(userId, on: req.db) {
@@ -116,7 +116,7 @@ struct SeventeenTrackWebhookController: RouteCollection {
                 AppMetrics.shared.notificationCounter().increment(by: 1)
             } else {
                 req.logger.error("User \(userId) not found")
-                return .accepted
+                return .ok
             }
         } catch {
             req.logger.error("Error: \(error)")
